@@ -309,21 +309,95 @@
 .event-year { font-family: var(--mono); font-size: 11px; color: var(--gold); letter-spacing: 0.06em; padding-top: 3px; }
 
 /* ---- Timeline ---- */
-.timeline {
-  padding: 64px 0;
-  display: flex; flex-direction: column; gap: 100px;
+.timeline { padding: 40px 0 64px; }
+
+/* Horizontal rail (desktop): smooth side-scroll, snap to panels */
+.timeline-rail {
+  display: flex;
+  gap: 36px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 24px 32px 32px;
+  margin: 0 -32px;  /* extend to container edge */
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-deep) transparent;
 }
+.timeline-rail::-webkit-scrollbar { height: 8px; }
+.timeline-rail::-webkit-scrollbar-thumb { background: var(--gold-deep); border-radius: 4px; }
+
 .period {
-  display: grid; grid-template-columns: 120px 1fr; gap: 32px;
+  flex: 0 0 460px;
+  scroll-snap-align: start;
+  display: grid; grid-template-columns: 80px 1fr; gap: 20px;
+  padding: 32px 28px;
+  background: var(--bg-surface);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-lg);
 }
-@media (max-width: 800px) { .period { grid-template-columns: 60px 1fr; gap: 18px; } }
-.period-marker {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+.period-marker { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.period-number { font-family: var(--serif-display); font-size: 36px; color: var(--gold); line-height: 1; }
+.period-line { flex: 1; width: 1px; background: var(--divider); min-height: 100px; margin-top: 6px; }
+
+.period-content h2 { font-size: 26px; line-height: 1.15; }
+.period-content .lede { font-size: 15px; line-height: 1.55; max-width: none; }
+
+.period-thumbs {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  margin-top: 24px;
 }
-.period-number {
-  font-family: var(--serif-display); font-size: 48px; color: var(--gold); line-height: 1;
+.period-thumb {
+  display: flex; flex-direction: column; gap: 6px;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: transform .2s;
 }
-.period-line { flex: 1; width: 1px; background: var(--divider); min-height: 200px; margin-top: 6px; }
+.period-thumb:hover { transform: translateY(-2px); }
+.period-thumb .map-frame { border-radius: var(--radius-sm); }
+.period-thumb-title {
+  font-family: var(--serif-body); font-size: 11px;
+  color: var(--ink-dim); line-height: 1.3;
+  padding: 0 2px;
+}
+.period-thumb-curated .map-frame { box-shadow: 0 0 0 1px var(--gold-deep); }
+
+.timeline-nav {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  margin-top: 12px;
+}
+.timeline-dots {
+  display: flex; gap: 8px; align-items: center;
+}
+.timeline-dot {
+  width: 18px; height: 6px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.timeline-dot span {
+  display: block;
+  width: 18px; height: 4px;
+  background: var(--divider);
+  border-radius: 2px;
+  transition: background .2s;
+}
+.timeline-dot:hover span { background: var(--ink-muted); }
+.timeline-dot.active span { background: var(--gold); }
+
+/* On narrow viewports, fall back to vertical stack */
+@media (max-width: 800px) {
+  .timeline-rail {
+    flex-direction: column;
+    overflow-x: visible;
+    padding: 0;
+    margin: 0;
+    gap: 24px;
+  }
+  .period { flex: 0 0 auto; }
+  .timeline-nav { display: none; }
+}
 
 /* ============ Compare ============ */
 .compare-header { padding: 56px 0 24px; }
@@ -1218,6 +1292,81 @@ a.stats-list-name:hover { color: var(--gold); }
   letter-spacing: 0.06em;
 }
 .stats-list-compact li { padding: 7px 12px; font-size: 13px; }
+
+/* ============ Map annotation pins ============ */
+.annotation-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.annotation-pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  width: 24px; height: 32px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+}
+.annotation-pin::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 22px; height: 22px;
+  background: var(--gold);
+  border-radius: 50% 50% 50% 0;
+  rotate: -45deg;
+  border: 1.5px solid oklch(18% 0.01 60);
+}
+.annotation-pin::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 6px; height: 6px;
+  background: oklch(18% 0.01 60);
+  border-radius: 50%;
+}
+.annotation-num {
+  position: absolute;
+  top: 3px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono); font-size: 10px; font-weight: bold;
+  color: oklch(18% 0.01 60);
+  z-index: 2;
+}
+.annotation-pin:hover::before { background: var(--gold-soft); }
+
+.annotation-flyout {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 38px));
+  background: var(--bg-elev);
+  border: 1px solid var(--gold-deep);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  min-width: 220px; max-width: 280px;
+  pointer-events: auto;
+  z-index: 10;
+  font-family: var(--serif-body);
+  font-size: 13px; line-height: 1.5;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.annotation-flyout-head {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  color: var(--gold); margin-bottom: 6px; text-transform: uppercase;
+}
+.annotation-remove {
+  background: transparent; border: 0;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+  color: var(--terracotta); cursor: pointer;
+  padding: 0;
+}
+.annotation-remove:hover { text-decoration: underline; }
 
 /* ============ Atlas (meta-map) ============ */
 .atlas-controls {

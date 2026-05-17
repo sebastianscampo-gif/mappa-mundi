@@ -1141,8 +1141,9 @@ function renderMapDetail(id) {
                 `<img id="viewer-img" src="${m.download_url}" alt="${escapeAttr(m.title)}" class="viewer-img"${rotationFor(m) ? ` style="transform: rotate(${rotationFor(m)}deg)"` : ''}
                    onload="this.classList.add('loaded')"
                    onerror="this.style.display='none'"/>` : ''}
+              <div class="annotation-layer" id="annotation-layer"></div>
             </div>
-            <div class="viewer-hint">Click image for full-screen zoom · scroll to zoom · drag to pan</div>
+            <div class="viewer-hint">Click image for full-screen zoom · scroll to zoom · drag to pan · <strong style="color:var(--gold)">double-click</strong> to drop a pinned annotation</div>
           </div>
           <div class="viewer-actions">
             <button class="btn btn-primary" data-action="save" style="opacity:${saveOpacity}">${icons.bookmark} ${saveLabel}</button>
@@ -1356,6 +1357,91 @@ function renderCitations(m) {
 function bindViewer(m) {
   const stage = $("#viewer-stage");
   const canvas = $("#viewer-canvas");
+
+  // ---- Pinned annotations on the map image ----
+  // User double-clicks anywhere on the viewer to drop a pin. A small panel asks for
+  // a note text. The pin is saved with normalized x/y coords (0–1) so it survives
+  // pan/zoom. Annotations live in Account state; logged-out users can still try
+  // the interaction but won't see persistence.
+  const annotationLayer = $("#annotation-layer");
+
+  function annotationsFor(mapId) {
+    const u = Account.current();
+    return (u?.annotations || []).filter(a => a.mapId === mapId);
+  }
+  function saveAnnotations(mapId, list) {
+    const u = Account.current();
+    if (!u) return;
+    if (!u.annotations) u.annotations = [];
+    u.annotations = u.annotations.filter(a => a.mapId !== mapId).concat(list);
+    Account.update({ annotations: u.annotations });
+  }
+  function renderAnnotations() {
+    if (!annotationLayer) return;
+    const anns = annotationsFor(m.id);
+    annotationLayer.innerHTML = anns.map(a => `
+      <button class="annotation-pin" data-ann-id="${a.id}" style="left:${a.x*100}%; top:${a.y*100}%" title="${escapeAttr(a.text)}">
+        <span class="annotation-num">${anns.indexOf(a)+1}</span>
+      </button>
+    `).join("") + anns.map((a, i) => `
+      <div class="annotation-flyout" data-ann-flyout="${a.id}" hidden style="left:${a.x*100}%; top:${a.y*100}%">
+        <div class="annotation-flyout-head">Note #${i+1}</div>
+        <p>${escapeAttr(a.text)}</p>
+        <div class="row" style="justify-content:space-between; margin-top:6px">
+          <span class="meta" style="font-size:9px">${new Date(a.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
+          <button class="annotation-remove" data-ann-remove="${a.id}">Remove</button>
+        </div>
+      </div>
+    `).join("");
+    // Toggle flyout
+    $$('[data-ann-id]').forEach(btn => btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.annId;
+      $$('[data-ann-flyout]').forEach(f => { f.hidden = f.dataset.annFlyout !== id; });
+    }));
+    $$('[data-ann-remove]').forEach(btn => btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.annRemove;
+      const list = annotationsFor(m.id).filter(a => a.id !== id);
+      saveAnnotations(m.id, list);
+      renderAnnotations();
+    }));
+  }
+  // Close flyouts on outside click
+  document.addEventListener("click", () => {
+    $$('[data-ann-flyout]').forEach(f => f.hidden = true);
+  });
+
+  if (stage && annotationLayer) {
+    // Initial render
+    renderAnnotations();
+    // Double-click to drop a pin
+    stage.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      if (!Account.isSignedIn()) {
+        alert("Sign in to drop pinned annotations.");
+        navigate("account/signin");
+        return;
+      }
+      // Compute click position in normalized coords relative to the stage
+      const rect = stage.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      if (x < 0 || x > 1 || y < 0 || y > 1) return;
+      const text = prompt("Add a note for this point on the map:");
+      if (text && text.trim()) {
+        const list = annotationsFor(m.id);
+        list.push({
+          id: "ann_" + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+          mapId: m.id, x, y, text: text.trim(),
+          createdAt: new Date().toISOString(),
+        });
+        saveAnnotations(m.id, list);
+        renderAnnotations();
+      }
+    });
+  }
+
   // Wire citation copy buttons (works even when stage isn't present)
   $$('[data-copy-cite]').forEach(btn => btn.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -1487,35 +1573,81 @@ const TIMELINE_PERIODS = [
 ];
 
 function renderTimeline() {
-  $("#timeline-root").innerHTML = TIMELINE_PERIODS.map((p, i) => {
+  // Precompute samples per era
+  const periods = TIMELINE_PERIODS.map(p => {
     const inEra = MAPS.filter(m => MAP_ERA[m.id] === p.eraKey && m.renderable);
     const curatedInEra = inEra.filter(m => m.significance);
-    // Prefer curated fichas in the sample; fill remainder with other renderable maps from the era
     const sample = [
       ...curatedInEra.slice(0, 4),
       ...inEra.filter(m => !m.significance).slice(0, Math.max(0, 4 - curatedInEra.length))
     ].slice(0, 4);
-    return `
-      <article class="period">
-        <div class="period-marker">
-          <span class="period-number">${String(i+1).padStart(2,'0')}</span>
-          <div class="period-line"></div>
-        </div>
-        <div class="period-content">
-          <span class="meta">${p.range} · ${fmt(inEra.length)} maps in archive${curatedInEra.length ? ` · ${fmt(curatedInEra.length)} with curated essay` : ''}</span>
-          <h2 style="margin-top:8px">${p.name}</h2>
-          <p class="lede" style="margin-top:18px; max-width:62ch">${p.blurb}</p>
-          ${sample.length ? `
-            <div class="grid-cards" style="margin-top:36px">${sample.map(mapCard).join("")}</div>
-            <div class="row" style="margin-top:24px; gap:6px; flex-wrap:wrap">
-              ${inEra.length > 4 ? `<a class="btn btn-ghost" href="#/archive" data-era-link="${p.eraKey}" style="padding-left:0">Browse all ${fmt(inEra.length)} maps from this era ${icons.arrow}</a>` : ''}
-              ${curatedInEra.length > 4 ? `<a class="btn btn-ghost" href="#/archive" data-era-link="${p.eraKey}" data-era-curated="1">See the ${fmt(curatedInEra.length)} curated essays only ${icons.arrow}</a>` : ''}
-            </div>
-          ` : `<p style="margin-top:24px; color:var(--ink-muted); font-style:italic">No maps in this period are catalogued yet.</p>`}
-        </div>
-      </article>
-    `;
-  }).join("");
+    return { ...p, inEra, curatedInEra, sample };
+  });
+
+  // Horizontal scrollable rail (desktop) — each era is a horizontally-aligned panel.
+  // On mobile it falls back to a vertical stack via CSS @media query.
+  $("#timeline-root").innerHTML = `
+    <div class="timeline-rail" id="timeline-rail">
+      ${periods.map((p, i) => `
+        <article class="period" data-era="${p.eraKey}">
+          <div class="period-marker">
+            <span class="period-number">${String(i+1).padStart(2,'0')}</span>
+            <div class="period-line"></div>
+          </div>
+          <div class="period-content">
+            <span class="meta">${p.range} · ${fmt(p.inEra.length)} maps${p.curatedInEra.length ? ` · ${fmt(p.curatedInEra.length)} curated` : ''}</span>
+            <h2 style="margin-top:8px">${p.name}</h2>
+            <p class="lede" style="margin-top:18px">${p.blurb}</p>
+            ${p.sample.length ? `
+              <div class="period-thumbs">${p.sample.map(m => `
+                <a class="period-thumb${m.significance ? ' period-thumb-curated' : ''}" href="#/map/${m.id}" title="${escapeAttr(m.title)}">
+                  <div class="map-frame map-frame-img" style="aspect-ratio:1/1">${imageEl(m, {eager:true})}</div>
+                  <span class="period-thumb-title">${shortTitle(m.title, 36)}</span>
+                </a>`).join("")}
+              </div>
+              <div class="row" style="margin-top:18px; gap:6px; flex-wrap:wrap">
+                ${p.inEra.length > 4 ? `<a class="btn btn-ghost btn-sm" href="#/archive" data-era-link="${p.eraKey}" style="padding-left:0">All ${fmt(p.inEra.length)} ${icons.arrow}</a>` : ''}
+                ${p.curatedInEra.length > 4 ? `<a class="btn btn-ghost btn-sm" href="#/archive" data-era-link="${p.eraKey}" data-era-curated="1">${fmt(p.curatedInEra.length)} curated ${icons.arrow}</a>` : ''}
+              </div>
+            ` : `<p style="margin-top:18px; color:var(--ink-muted); font-style:italic">No maps in this period are catalogued yet.</p>`}
+          </div>
+        </article>
+      `).join("")}
+    </div>
+    <div class="timeline-nav">
+      <button class="icon-btn" data-tl-scroll="left" aria-label="Scroll earlier">←</button>
+      <div class="timeline-dots">
+        ${periods.map((p, i) => `<button class="timeline-dot" data-jump="${i}" title="${p.name}"><span></span></button>`).join("")}
+      </div>
+      <button class="icon-btn" data-tl-scroll="right" aria-label="Scroll later">→</button>
+    </div>
+  `;
+
+  // Horizontal scroll buttons
+  const rail = $("#timeline-rail");
+  if (rail) {
+    $$('[data-tl-scroll]').forEach(b => b.addEventListener("click", () => {
+      const dx = b.dataset.tlScroll === 'right' ? rail.clientWidth * 0.8 : -rail.clientWidth * 0.8;
+      rail.scrollBy({ left: dx, behavior: 'smooth' });
+    }));
+    $$('[data-jump]').forEach(b => b.addEventListener("click", () => {
+      const i = +b.dataset.jump;
+      const panel = rail.querySelectorAll('.period')[i];
+      if (panel) rail.scrollTo({ left: panel.offsetLeft - 24, behavior: 'smooth' });
+    }));
+    // Highlight active dot as you scroll
+    rail.addEventListener("scroll", () => {
+      const panels = rail.querySelectorAll('.period');
+      const dots = $$('.timeline-dot');
+      let activeIdx = 0;
+      panels.forEach((p, i) => {
+        if (p.offsetLeft - rail.scrollLeft < rail.clientWidth * 0.4) activeIdx = i;
+      });
+      dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
+    });
+    // Trigger initial dot highlight
+    rail.dispatchEvent(new Event('scroll'));
+  }
   $$('[data-era-link]').forEach(a => a.addEventListener("click", (e) => {
     e.preventDefault();
     archiveState.era = a.dataset.eraLink;
@@ -3100,6 +3232,30 @@ function bindLangToggle() {
   });
 }
 
+function currentTheme() {
+  try { return localStorage.getItem("mappaTheme") || "dark"; } catch { return "dark"; }
+}
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const sun = document.querySelector(".theme-icon-sun");
+  const moon = document.querySelector(".theme-icon-moon");
+  if (sun && moon) {
+    if (theme === "light") { sun.hidden = true; moon.hidden = false; }
+    else { sun.hidden = false; moon.hidden = true; }
+  }
+  // Update the theme-color meta to match
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) themeColorMeta.setAttribute("content", theme === "light" ? "#f5efe0" : "#15110b");
+}
+function bindThemeToggle() {
+  applyTheme(currentTheme());
+  document.getElementById("theme-toggle")?.addEventListener("click", () => {
+    const next = currentTheme() === "light" ? "dark" : "light";
+    try { localStorage.setItem("mappaTheme", next); } catch {}
+    applyTheme(next);
+  });
+}
+
 function init() {
   if (!window.MAPS_RAW || !window.MAPS_RAW.length) {
     document.body.innerHTML = '<div style="padding:80px 32px; font-family: var(--serif-body); color: var(--ink);"><h1>Map data failed to load.</h1><p style="margin-top:16px; color: var(--ink-muted)">The maps.js dataset (2 MB) didn\'t reach the page. This is usually a temporary network issue — try refreshing.</p></div>';
@@ -3113,10 +3269,15 @@ function init() {
   applyStaticI18n();
   bindNav();
   bindLangToggle();
+  bindThemeToggle();
   bindSearch();
   bindZoomGlobal();
   bindSearchModal();
   renderRoute();
+  // Register service worker (silently — only on http(s) origins, not file://)
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("[SW] registration failed:", err));
+  }
   // Run smoke tests after the first render (so the hash is whatever the user landed on)
   setTimeout(runSmokeTests, 100);
 }

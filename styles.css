@@ -1,6 +1,6 @@
 /* ============ Mappa Mundi — Design System ============ */
 :root {
-  /* warm dark museum palette */
+  /* warm dark museum palette (default) */
   --bg-deep: oklch(13% 0.008 60);
   --bg-surface: oklch(17% 0.01 60);
   --bg-card: oklch(21% 0.012 60);
@@ -38,6 +38,51 @@
 
   --maxw: 1400px;
 }
+
+/* ============ Light theme (opt-in via [data-theme="light"] on <html>) ============ */
+[data-theme="light"] {
+  /* warm parchment palette */
+  --bg-deep: oklch(97% 0.008 75);
+  --bg-surface: oklch(94% 0.01 75);
+  --bg-card: oklch(91% 0.012 75);
+  --bg-elev: oklch(88% 0.014 75);
+  --divider: oklch(82% 0.012 75);
+  --divider-soft: oklch(86% 0.01 75);
+
+  --ink: oklch(20% 0.01 60);
+  --ink-dim: oklch(34% 0.012 60);
+  --ink-muted: oklch(48% 0.014 60);
+  --ink-faint: oklch(64% 0.012 60);
+
+  --gold: oklch(50% 0.11 70);
+  --gold-soft: oklch(56% 0.09 70);
+  --gold-deep: oklch(38% 0.1 65);
+  --blue: oklch(38% 0.09 240);
+  --blue-deep: oklch(30% 0.08 240);
+  --green: oklch(40% 0.07 150);
+  --green-deep: oklch(30% 0.06 150);
+  --terracotta: oklch(45% 0.11 35);
+
+  --shadow-sm: 0 1px 0 rgba(120,90,40,.06), 0 4px 12px rgba(120,90,40,.08);
+  --shadow: 0 1px 0 rgba(120,90,40,.06), 0 12px 32px rgba(120,90,40,.10);
+  --shadow-lg: 0 1px 0 rgba(120,90,40,.06), 0 24px 60px rgba(120,90,40,.14);
+}
+
+[data-theme="light"] body::after { opacity: .015; }
+[data-theme="light"] .map-frame { background: oklch(90% 0.015 75); }
+[data-theme="light"] .map-frame .frame-label {
+  background: rgba(245, 240, 225, .7);
+  color: var(--ink-dim);
+}
+[data-theme="light"] .map-frame::after {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.15), transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(120,90,40,.10), transparent 50%);
+}
+[data-theme="light"] .nav { background: var(--bg-deep); }
+[data-theme="light"] .map-card { background: var(--bg-surface); }
+[data-theme="light"] .atlas-stage { background: oklch(88% 0.015 75); }
+[data-theme="light"] .atlas-svg .pin-count { fill: oklch(95% 0.005 60); }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
