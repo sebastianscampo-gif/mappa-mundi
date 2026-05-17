@@ -222,3 +222,23 @@ Tres mejoras de UX:
 - **Sort "Most metadata"** ahora pondera fuertemente la presencia de `significance` (×10), de modo que las fichas curadas siempre suben primero.
 
 Chip activo "Only curated fichas" aparece sobre el grid cuando el filtro está activado, y "Clear all filters" lo resetea como los otros.
+
+## Iteración 3 — distinción honesta de metadata (commit en curso)
+
+### Problema detectado
+- **19 autores** en mapas Wikimedia son usernames de Wikipedia (Pi3.124, Sepultura, CCo1tar, Wikideas1, etc.), no cartógrafos históricos.
+- **141 mapas Wikimedia** tienen `year >= 2000` — la fecha es la del archivo/upload moderno, no del mapa histórico.
+- Mostrarlos como "Cartographer" y "Date" como si fueran datos históricos era engañoso.
+
+### Aplicado
+- Flag `_authorIsContributor=true` cuando el autor coincide con patrón de uploader (usernames sin espacios con dígitos, "(talk · contribs)", "derivative work made by", "Wikipedia user", etc.). 19 mapas marcados.
+- Flag `_yearIsModernCreation=true` para los 141 mapas con yearNum >= 2000 que son derivativos modernos.
+- Campo `depictedYear` extraído del título cuando hay una fecha histórica clara (ej. "1700 CE world map" → depictedYear=1700, year=creación moderna). 25 mapas con depictedYear.
+
+### UI honesta
+- **Map cards**: cuando hay `depictedYear`, el frame-label dice "depicts 1700" en vez de mostrar 2013 a secas. El chip del año sigue mostrando la fecha que representa el mapa.
+- **Map cards**: cuando `_authorIsContributor`, el nombre del uploader no se muestra en la card (no se hace pasar por cartógrafo).
+- **Map detail page**: la fila "Cartographer" cambia a "Source contributor" cuando es un uploader, con una nota en mono pequeña "Wikimedia uploader, not the historical cartographer".
+- **Map detail page**: cuando hay `depictedYear`, aparecen dos filas — "Depicts: 1710" y "Map created: 2022 · modern reconstruction".
+- **Map detail page**: cuando solo hay `_yearIsModernCreation` sin depictedYear, el year se acompaña de "modern creation date, not the date of any historical map".
+

@@ -171,13 +171,25 @@ function imageEl(m, opts = {}) {
 }
 
 function mapCard(m) {
-  const y = m.year && m.year !== 'Undated' ? m.year : (m.century !== 'Undated' ? m.century : 'Undated');
+  // Display year — prefer depictedYear if present (the historical date the map shows),
+  // otherwise the map's own date. The yearLabel marks modern reconstructions.
+  let y, yearLabel = "";
+  if (m.depictedYear) {
+    y = String(m.depictedYear);
+    yearLabel = `depicts ${m.depictedYear}`;
+  } else if (m.year && m.year !== 'Undated') {
+    y = m.year;
+  } else if (m.century && m.century !== 'Undated') {
+    y = m.century;
+  } else {
+    y = 'Undated';
+  }
   const curated = !!m.significance;
   return `
     <a class="map-card${curated ? ' map-card-curated' : ''}" href="#/map/${m.id}">
       <div class="map-frame map-frame-img">
         ${imageEl(m)}
-        <div class="frame-label">${y}</div>
+        <div class="frame-label">${yearLabel || y}</div>
         ${curated ? '<div class="curated-badge" title="Curated ficha — includes editorial essay on significance, interpretation and distortions">★ Curated</div>' : ''}
       </div>
       <div class="map-card-body">
@@ -189,7 +201,7 @@ function mapCard(m) {
         ${m.description ? `<p class="desc">${shortText(m.description, 150)}</p>` : ''}
         <div class="meta-row" style="margin-top:6px">
           ${m.region ? `<span class="meta">${m.region}</span>` : ''}
-          ${m.author ? `<span class="dot"></span><span class="meta">${shortText(m.author, 40)}</span>` : ''}
+          ${m.author && !m._authorIsContributor ? `<span class="dot"></span><span class="meta">${shortText(m.author, 40)}</span>` : ''}
         </div>
       </div>
     </a>`;
@@ -860,8 +872,10 @@ function renderMapDetail(id) {
             ${m.region ? `<span class="dot"></span><span class="meta">${m.region}</span>` : ''}
           </div>
           <div class="kv">
-            ${m.author ? `<div class="kv-row"><span>Cartographer</span><span>${m.author}</span></div>` : ''}
-            <div class="kv-row"><span>Date</span><span>${m.year}</span></div>
+            ${m.author ? `<div class="kv-row"><span>${m._authorIsContributor ? 'Source contributor' : 'Cartographer'}</span><span>${m.author}${m._authorIsContributor ? ' <em style="color:var(--ink-muted); font-style:normal; font-family:var(--mono); font-size:10px; letter-spacing:0.06em">· Wikimedia uploader, not the historical cartographer</em>' : ''}</span></div>` : ''}
+            ${m.depictedYear ? `<div class="kv-row"><span>Depicts</span><span>${m.depictedYear}</span></div>
+            <div class="kv-row"><span>Map created</span><span>${m.year} <em style="color:var(--ink-muted); font-style:normal; font-family:var(--mono); font-size:10px; letter-spacing:0.06em">· modern reconstruction</em></span></div>` : `
+            <div class="kv-row"><span>Date</span><span>${m.year}${m._yearIsModernCreation ? ' <em style="color:var(--ink-muted); font-style:normal; font-family:var(--mono); font-size:10px; letter-spacing:0.06em">· modern creation date, not the date of any historical map</em>' : ''}</span></div>`}
             <div class="kv-row"><span>Century</span><span>${m.century}</span></div>
             <div class="kv-row"><span>Era</span><span>${ERAS.find(e => e.key === MAP_ERA[m.id])?.label || 'Undated'}</span></div>
             ${m.country ? `<div class="kv-row"><span>Country / Area</span><span>${m.country}</span></div>` : ''}
