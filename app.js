@@ -357,9 +357,17 @@ const archiveState = {
   tags: new Set(),          // selected tag strings
   sort: "Oldest dated first",
   fichaQuality: "all",      // "all" | "full" — show only maps with curated full ficha
+  yearFrom: null,           // int or null
+  yearTo: null,             // int or null
   page: 1,
   pageSize: 48,
 };
+
+// Effective year for filtering: prefer depictedYear (what the map shows) over yearNum (when the map was made).
+// This way "The Ottoman Empire in 1710" (created 2022, depicts 1710) filters into 1700-1715 range.
+function effectiveYear(m) {
+  return m.depictedYear != null ? m.depictedYear : m.yearNum;
+}
 
 function renderArchive() {
   const root = $("#archive-content");
@@ -569,6 +577,21 @@ function renderCategoryDetail(root, catKey) {
             </div>
           </div>
 
+          <div class="filter-block">
+            <span class="eyebrow">Year range</span>
+            <p class="meta" style="margin-top:6px; font-family:var(--serif-body); text-transform:none; letter-spacing:0; font-size:12px; color:var(--ink-muted); font-style:italic">Use negative numbers for BCE (e.g. −500 for 500 BCE). Maps with no year are excluded when this filter is set.</p>
+            <div class="year-range-inputs" style="display:flex; gap:10px; margin-top:10px; align-items:center">
+              <label style="flex:1; display:flex; flex-direction:column; gap:4px">
+                <span class="meta" style="letter-spacing:0.08em">From</span>
+                <input type="number" class="input" data-year-input="from" placeholder="any" value="${archiveState.yearFrom ?? ''}" step="1" style="width:100%"/>
+              </label>
+              <label style="flex:1; display:flex; flex-direction:column; gap:4px">
+                <span class="meta" style="letter-spacing:0.08em">To</span>
+                <input type="number" class="input" data-year-input="to" placeholder="any" value="${archiveState.yearTo ?? ''}" step="1" style="width:100%"/>
+              </label>
+            </div>
+          </div>
+
           ${continents.length > 1 ? `<div class="filter-block">
             <span class="eyebrow">Continent</span>
             <select class="select" data-filter="continent" style="margin-top:8px; width:100%">
@@ -612,7 +635,7 @@ function renderCategoryDetail(root, catKey) {
             </select>
           </div>
 
-          ${archiveState.tags.size || archiveState.era !== 'all' || archiveState.continent !== 'All' || archiveState.language !== 'All' || archiveState.search || archiveState.fichaQuality !== 'all' ? `
+          ${archiveState.tags.size || archiveState.era !== 'all' || archiveState.continent !== 'All' || archiveState.language !== 'All' || archiveState.search || archiveState.fichaQuality !== 'all' || archiveState.yearFrom != null || archiveState.yearTo != null ? `
             <button class="btn btn-sm" id="clear-all-filters" style="margin-top:8px">Clear all filters</button>
           ` : ''}
         </aside>
@@ -660,6 +683,10 @@ function activeFilterChips() {
   if (archiveState.language !== "All") chips.push({ k:"__language", label:`Language: ${archiveState.language}` });
   archiveState.tags.forEach(t => chips.push({ k:`__tag:${t}`, label:`Tag: ${t}` }));
   if (archiveState.fichaQuality === "full") chips.push({ k:"__ficha", label:`Only curated fichas` });
+  if (archiveState.yearFrom != null || archiveState.yearTo != null) {
+    const fmtYear = (y) => y == null ? '∞' : (y < 0 ? `${-y} BCE` : String(y));
+    chips.push({ k:"__year", label:`Year: ${fmtYear(archiveState.yearFrom)} – ${fmtYear(archiveState.yearTo)}` });
+  }
   return chips;
 }
 
@@ -679,6 +706,14 @@ function filterMaps(opts = {}) {
   if (archiveState.language !== "All") list = list.filter(m => m.language === archiveState.language);
   if (archiveState.tags.size) list = list.filter(m => [...archiveState.tags].every(t => (m.tags||[]).includes(t)));
   if (archiveState.fichaQuality === "full") list = list.filter(m => !!m.significance);
+  if (archiveState.yearFrom != null || archiveState.yearTo != null) {
+    const lo = archiveState.yearFrom ?? -99999;
+    const hi = archiveState.yearTo ?? 99999;
+    list = list.filter(m => {
+      const y = effectiveYear(m);
+      return y != null && y >= lo && y <= hi;
+    });
+  }
 
   switch (archiveState.sort) {
     case "Oldest dated first":
@@ -732,6 +767,20 @@ function wireResultControls() {
     archiveState.page = 1;
     renderArchive();
   }));
+  // Year range inputs (debounced)
+  let _yearTimer;
+  $$('input[data-year-input]').forEach(inp => inp.addEventListener("input", (e) => {
+    clearTimeout(_yearTimer);
+    _yearTimer = setTimeout(() => {
+      const which = e.target.dataset.yearInput;
+      const v = e.target.value.trim();
+      const parsed = v === '' ? null : parseInt(v, 10);
+      if (which === 'from') archiveState.yearFrom = isNaN(parsed) ? null : parsed;
+      if (which === 'to') archiveState.yearTo = isNaN(parsed) ? null : parsed;
+      archiveState.page = 1;
+      renderArchive();
+    }, 400);
+  }));
   // Era radios
   $$('input[name="era"]').forEach(r => r.addEventListener("change", (e) => {
     archiveState.era = e.target.value;
@@ -755,6 +804,7 @@ function wireResultControls() {
     else if (k === "__continent") archiveState.continent = "All";
     else if (k === "__language") archiveState.language = "All";
     else if (k === "__ficha") archiveState.fichaQuality = "all";
+    else if (k === "__year") { archiveState.yearFrom = null; archiveState.yearTo = null; }
     else if (k.startsWith("__tag:")) archiveState.tags.delete(k.slice(6));
     archiveState.page = 1;
     renderArchive();
@@ -793,6 +843,8 @@ function clearAllFilters() {
   archiveState.language = "All";
   archiveState.tags = new Set();
   archiveState.fichaQuality = "all";
+  archiveState.yearFrom = null;
+  archiveState.yearTo = null;
   archiveState.page = 1;
   renderArchive();
 }
