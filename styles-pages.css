@@ -1219,6 +1219,24 @@ a.stats-list-name:hover { color: var(--gold); }
 }
 .stats-list-compact li { padding: 7px 12px; font-size: 13px; }
 
+/* ============ Compare sync zoom/pan toolbar ============ */
+.compare-syncbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 12px 16px;
+  margin: 16px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+}
+.compare-syncbar .icon-btn { width: 32px; height: 32px; font-size: 16px; }
+.meta-faint { color: var(--ink-faint); font-style: italic; font-family: var(--serif-body); text-transform:none; letter-spacing:0; font-size: 12px; }
+.compare-syncpan { overflow: hidden; cursor: grab; }
+.compare-syncpan-inner {
+  position: absolute; inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
 /* ============ Compare presets ============ */
 .compare-presets {
   margin: 28px 0 24px;

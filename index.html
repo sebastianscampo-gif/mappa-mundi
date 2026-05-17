@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<a class="skip-link" href="#main-content">Skip to main content</a>
+<a class="skip-link" href="#main-content" data-i18n="skip.main">Skip to main content</a>
 
 <!-- ============ NAV ============ -->
 <header class="nav">
@@ -22,20 +22,23 @@
       <span>Mappa Mundi</span>
     </a>
     <nav class="nav-links" id="nav-links" aria-label="Main navigation">
-      <a class="nav-link" data-page="home" href="#/home">Home</a>
-      <a class="nav-link" data-page="archive" href="#/archive">Categories</a>
-      <a class="nav-link" data-page="timeline" href="#/timeline">Timeline</a>
-      <a class="nav-link" data-page="compare" href="#/compare">Compare</a>
-      <a class="nav-link" data-page="collections" href="#/collections">Collections</a>
-      <a class="nav-link" data-page="learn" href="#/learn">Learn</a>
-      <a class="nav-link" data-page="about" href="#/about">About</a>
-      <a class="nav-link" data-page="library" href="#/library">Library</a>
+      <a class="nav-link" data-page="home" href="#/home" data-i18n="nav.home">Home</a>
+      <a class="nav-link" data-page="archive" href="#/archive" data-i18n="nav.archive">Categories</a>
+      <a class="nav-link" data-page="timeline" href="#/timeline" data-i18n="nav.timeline">Timeline</a>
+      <a class="nav-link" data-page="compare" href="#/compare" data-i18n="nav.compare">Compare</a>
+      <a class="nav-link" data-page="collections" href="#/collections" data-i18n="nav.collections">Collections</a>
+      <a class="nav-link" data-page="learn" href="#/learn" data-i18n="nav.learn">Learn</a>
+      <a class="nav-link" data-page="about" href="#/about" data-i18n="nav.about">About</a>
+      <a class="nav-link" data-page="library" href="#/library" data-i18n="nav.library">Library</a>
     </nav>
     <div class="nav-actions">
-      <button class="icon-btn" id="global-search-btn" title="Search">
+      <button class="icon-btn" id="global-search-btn" data-i18n-title="nav.search" title="Search">
         <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
       </button>
-      <button class="icon-btn nav-menu-btn" id="nav-menu-btn" title="Menu" aria-label="Open menu" aria-expanded="false">
+      <button class="lang-toggle" id="lang-toggle" title="Switch language" aria-label="Switch language">
+        <span data-i18n="lang.toggle">Español</span>
+      </button>
+      <button class="icon-btn nav-menu-btn" id="nav-menu-btn" data-i18n-title="nav.menu" title="Menu" aria-label="Open menu" aria-expanded="false">
         <svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
       </button>
       <div id="nav-account-slot" class="nav-account-slot"></div>
@@ -83,19 +86,19 @@
       </svg>
     </div>
     <div class="hero-inner">
-      <div class="eyebrow">Est. MMXXIV — A Digital Atlas of Cartography</div>
+      <div class="eyebrow" data-i18n="hero.eyebrow">Est. MMXXIV — A Digital Atlas of Cartography</div>
       <h1 style="margin-top:18px">Mappa <em>Mundi</em></h1>
-      <p class="subtitle">Explore the history of the world through maps.</p>
+      <p class="subtitle" data-i18n="hero.subtitle">Explore the history of the world through maps.</p>
       <div class="search hero-search" id="hero-search">
         <svg class="i i-lg" viewBox="0 0 24 24" style="color:var(--ink-muted)"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
-        <input placeholder="Search maps, places, periods, empires, climates…"/>
+        <input data-i18n-placeholder="hero.placeholder" placeholder="Search maps, places, periods, empires, climates…"/>
         <span class="kbd">⌘ K</span>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><div class="num">1,559</div><div class="lbl">Maps catalogued</div></div>
-        <div class="hero-stat"><div class="num">16</div><div class="lbl">Archive categories</div></div>
-        <div class="hero-stat"><div class="num">28</div><div class="lbl">Source institutions</div></div>
-        <div class="hero-stat"><div class="num">12</div><div class="lbl">Centuries covered</div></div>
+        <div class="hero-stat"><div class="num">1,559</div><div class="lbl" data-i18n="hero.stat.maps">Maps catalogued</div></div>
+        <div class="hero-stat"><div class="num">16</div><div class="lbl" data-i18n="hero.stat.cats">Archive categories</div></div>
+        <div class="hero-stat"><div class="num">28</div><div class="lbl" data-i18n="hero.stat.inst">Source institutions</div></div>
+        <div class="hero-stat"><div class="num">12</div><div class="lbl" data-i18n="hero.stat.cents">Centuries covered</div></div>
       </div>
     </div>
   </div>

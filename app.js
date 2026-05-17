@@ -6,8 +6,112 @@
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-const fmt = (n) => n.toLocaleString("en-US");
+const fmt = (n) => n.toLocaleString(currentLocale() === 'es' ? "es-ES" : "en-US");
 const MAPS = window.MAPS_RAW || [];
+
+/* ============ i18n — interface translation (chrome only) ============
+ * The map dataset stays in its source language (LoC English, Spanish for Hispanic LoC entries,
+ * etc.). We translate only the application chrome (nav, buttons, section headings, common labels).
+ * Locale is persisted in localStorage as "mappaLocale".
+ */
+const LANG = {
+  en: {
+    "nav.home":"Home","nav.archive":"Categories","nav.timeline":"Timeline","nav.compare":"Compare",
+    "nav.collections":"Collections","nav.learn":"Learn","nav.about":"About","nav.library":"Library",
+    "nav.signin":"Sign in","nav.create":"Create account","nav.menu":"Menu","nav.search":"Search",
+    "hero.eyebrow":"Est. MMXXIV — A Digital Atlas of Cartography",
+    "hero.subtitle":"Explore the history of the world through maps.",
+    "hero.placeholder":"Search maps, places, periods, empires, climates…",
+    "hero.stat.maps":"Maps catalogued","hero.stat.cats":"Archive categories",
+    "hero.stat.inst":"Source institutions","hero.stat.cents":"Centuries covered",
+    "home.cats.eyebrow":"Explore by category","home.cats.title":"Quick access","home.cats.cta":"Open the full archive →",
+    "home.coll.eyebrow":"Curated","home.coll.title":"Featured collections","home.coll.cta":"All collections →",
+    "home.curated.eyebrow":"Start here","home.curated.title":"Curated essays",
+    "home.curated.lede":"Forty maps with a full editorial essay on significance, what the map reveals, and the distortions that come with it. The best entry point to the archive.",
+    "home.curated.seeAll":"See all 40 curated →","home.curated.browseAll":"Or browse all 1,559 maps →",
+    "common.search":"Search","common.copy":"copy","common.copied":"✓ copied",
+    "common.clearAll":"Clear all filters","common.shareLink":"🔗 Copy share link","common.linkCopied":"✓ link copied",
+    "filter.era":"Historical era","filter.year":"Year range","filter.from":"From","filter.to":"To",
+    "filter.continent":"Continent","filter.language":"Language","filter.tags":"Tags",
+    "filter.quality":"Record quality","filter.curatedOnly":"Only curated fichas — maps with a full editorial essay (significance, interpretation, distortions)",
+    "filter.sort":"Sort by",
+    "detail.cite":"Cite this record","detail.viewSource":"View record at source institution",
+    "detail.cartographer":"Cartographer","detail.contributor":"Source contributor",
+    "detail.depicts":"Depicts","detail.created":"Map created","detail.date":"Date",
+    "detail.century":"Century","detail.era":"Era","detail.country":"Country / Area",
+    "detail.continent":"Continent","detail.maptype":"Map type","detail.language":"Language",
+    "detail.category":"Category","detail.source":"Source","detail.license":"License","detail.status":"Status",
+    "detail.shows":"What it shows","detail.context":"How this map came to be made",
+    "detail.reveals":"What the map reveals","detail.significance":"Significance",
+    "detail.meaning":"Political, cultural, or scientific stakes","detail.biases":"What this map gets wrong, or leaves out",
+    "detail.save":"Save to library","detail.saved":"Saved","detail.compare":"Compare",
+    "detail.fullscreen":"Open full screen","detail.note":"Add note","detail.source.btn":"View source",
+    "skip.main":"Skip to main content","footer.tagline":"An independent, educational project.",
+    "lang.toggle":"Español",
+  },
+  es: {
+    "nav.home":"Inicio","nav.archive":"Categorías","nav.timeline":"Cronología","nav.compare":"Comparar",
+    "nav.collections":"Colecciones","nav.learn":"Aprender","nav.about":"Acerca de","nav.library":"Biblioteca",
+    "nav.signin":"Iniciar sesión","nav.create":"Crear cuenta","nav.menu":"Menú","nav.search":"Buscar",
+    "hero.eyebrow":"Est. MMXXIV — Un atlas digital de cartografía",
+    "hero.subtitle":"Explora la historia del mundo a través de los mapas.",
+    "hero.placeholder":"Buscar mapas, lugares, periodos, imperios, climas…",
+    "hero.stat.maps":"Mapas catalogados","hero.stat.cats":"Categorías del archivo",
+    "hero.stat.inst":"Instituciones fuente","hero.stat.cents":"Siglos cubiertos",
+    "home.cats.eyebrow":"Explorar por categoría","home.cats.title":"Acceso rápido","home.cats.cta":"Abrir el archivo completo →",
+    "home.coll.eyebrow":"Seleccionado","home.coll.title":"Colecciones destacadas","home.coll.cta":"Todas las colecciones →",
+    "home.curated.eyebrow":"Empieza aquí","home.curated.title":"Fichas curadas",
+    "home.curated.lede":"Cuarenta mapas con ensayo editorial completo sobre su importancia, lo que el mapa revela y las distorsiones que arrastra. El mejor punto de entrada al archivo.",
+    "home.curated.seeAll":"Ver las 40 curadas →","home.curated.browseAll":"O explorar los 1.559 mapas →",
+    "common.search":"Buscar","common.copy":"copiar","common.copied":"✓ copiado",
+    "common.clearAll":"Quitar todos los filtros","common.shareLink":"🔗 Copiar enlace compartible","common.linkCopied":"✓ enlace copiado",
+    "filter.era":"Era histórica","filter.year":"Rango de años","filter.from":"Desde","filter.to":"Hasta",
+    "filter.continent":"Continente","filter.language":"Idioma","filter.tags":"Etiquetas",
+    "filter.quality":"Calidad de la ficha","filter.curatedOnly":"Solo fichas curadas — mapas con ensayo editorial completo (importancia, interpretación, sesgos)",
+    "filter.sort":"Ordenar por",
+    "detail.cite":"Citar este registro","detail.viewSource":"Ver registro en la institución original",
+    "detail.cartographer":"Cartógrafo","detail.contributor":"Contribuidor en la fuente",
+    "detail.depicts":"Representa","detail.created":"Mapa creado","detail.date":"Fecha",
+    "detail.century":"Siglo","detail.era":"Era","detail.country":"País / Área",
+    "detail.continent":"Continente","detail.maptype":"Tipo de mapa","detail.language":"Idioma",
+    "detail.category":"Categoría","detail.source":"Fuente","detail.license":"Licencia","detail.status":"Estado",
+    "detail.shows":"Qué muestra","detail.context":"Cómo se hizo este mapa",
+    "detail.reveals":"Qué revela el mapa","detail.significance":"Importancia",
+    "detail.meaning":"Significado político, cultural o científico","detail.biases":"Lo que este mapa distorsiona u omite",
+    "detail.save":"Guardar en la biblioteca","detail.saved":"Guardado","detail.compare":"Comparar",
+    "detail.fullscreen":"Pantalla completa","detail.note":"Añadir nota","detail.source.btn":"Ver fuente",
+    "skip.main":"Saltar al contenido principal","footer.tagline":"Un proyecto independiente y educativo.",
+    "lang.toggle":"English",
+  },
+};
+function currentLocale() {
+  try { return localStorage.getItem("mappaLocale") || "en"; } catch { return "en"; }
+}
+function setLocale(loc) {
+  try { localStorage.setItem("mappaLocale", loc); } catch {}
+  document.documentElement.lang = loc;
+  applyStaticI18n();
+  // Re-render the current page so JS-rendered strings update
+  renderRoute();
+  renderNavAccount();
+}
+function t(key) {
+  const loc = currentLocale();
+  return (LANG[loc] && LANG[loc][key]) || LANG.en[key] || key;
+}
+// Apply translations to any element with a data-i18n="key" attribute,
+// or data-i18n-placeholder for inputs, or data-i18n-title for tooltips
+function applyStaticI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    el.title = t(el.dataset.i18nTitle);
+  });
+}
 
 /* ---------- maps the SVG fallback style to a category ---------- */
 const CATEGORY_TO_STYLE = {
@@ -302,8 +406,8 @@ function renderRoute() {
   $$(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + page));
   $$(".nav-link").forEach(l => l.classList.toggle("active", l.dataset.page === page));
   window.scrollTo({ top: 0, behavior: "instant" });
-  // If we're leaving the map detail page, drop the viewer's window listeners
-  if (page !== "map") { _viewerCleanup?.(); _viewerCleanup = null; }
+  // If we're leaving the map detail page OR the compare page, drop any window listeners they registered
+  if (page !== "map" && page !== "compare") { _viewerCleanup?.(); _viewerCleanup = null; }
   if (page === "map") renderMapDetail(param || (MAPS[0] && MAPS[0].id));
   if (page === "archive") {
     // Special sentinels and category keys come in via param
@@ -956,8 +1060,27 @@ function renderMapDetail(id) {
   _viewerCleanup?.();       // remove stale window listeners from the previous map view
   _viewerCleanup = null;
 
-  const m = MAPS.find(x => x.id === id) || MAPS[0];
-  if (!m) { $("#map-detail-root").innerHTML = '<div class="container"><p>Map not found.</p></div>'; return; }
+  const m = MAPS.find(x => x.id === id);
+  if (!m) {
+    // Honest 404 with affordances — a missing ID is more useful than silently substituting MAPS[0]
+    const sampleCurated = MAPS.find(x => x.significance);
+    $("#map-detail-root").innerHTML = `
+      <div class="container" style="padding: 96px 0; max-width: 720px; text-align: center">
+        <span class="eyebrow" style="color:var(--terracotta)">404 · Map not found</span>
+        <h1 style="margin-top:18px; font-size:clamp(40px, 4vw, 64px)">No map matches the ID <code style="font-family:var(--mono); font-size:0.7em; color:var(--ink-muted)">${escapeAttr(id || '(empty)')}</code>.</h1>
+        <p class="lede" style="margin-top:24px; max-width: 56ch; margin-inline:auto">
+          The link you followed may be outdated, mistyped, or the record may have been removed from the archive.
+        </p>
+        <div class="row" style="justify-content:center; gap:10px; margin-top:36px; flex-wrap:wrap">
+          <a class="btn btn-primary" href="#/archive">Browse the archive</a>
+          ${sampleCurated ? `<a class="btn" href="#/map/${sampleCurated.id}">Open a curated example</a>` : ''}
+          <button class="btn btn-ghost" id="map-404-search">Search by keyword</button>
+        </div>
+      </div>
+    `;
+    $("#map-404-search")?.addEventListener("click", openSearchModal);
+    return;
+  }
 
   Account.recordView(m.id); // track viewing history while user is signed in
 
@@ -1436,9 +1559,16 @@ function renderCompare() {
       ` : ''}
 
       ${compareState.mode === 'side-by-side' ? `
+        <div class="compare-syncbar">
+          <span class="meta">Synced zoom &amp; pan</span>
+          <button class="icon-btn" data-syncpan="out" title="Zoom out (both maps)">−</button>
+          <button class="icon-btn" data-syncpan="in" title="Zoom in (both maps)">+</button>
+          <button class="icon-btn" data-syncpan="reset" title="Reset both">↺</button>
+          <span class="meta meta-faint" style="margin-left:6px">Scroll on either map zooms both · drag to pan both</span>
+        </div>
         <div class="compare-pair">
-          ${sidePanel(left)}
-          ${sidePanel(right)}
+          ${sidePanel(left, 'left')}
+          ${sidePanel(right, 'right')}
         </div>
       ` : `
         <div class="compare-overlay-stage">
@@ -1532,11 +1662,13 @@ function outsideClickHandler(e) {
   if (!e.target.closest('.map-picker')) closePicker();
 }
 
-function sidePanel(m) {
+function sidePanel(m, side) {
   return `
-    <div class="compare-panel">
-      <div class="map-frame map-frame-img" style="aspect-ratio:1.2/1">
-        ${imageEl(m, {eager: true})}
+    <div class="compare-panel" data-side="${side}">
+      <div class="map-frame map-frame-img compare-syncpan" data-pan-target="${side}" style="aspect-ratio:1.2/1">
+        <div class="compare-syncpan-inner" data-pan-inner="${side}">
+          ${imageEl(m, {eager: true})}
+        </div>
         <div class="frame-label">${m.year}${m.region ? ` · ${m.region.split(",")[0]}` : ''}</div>
       </div>
       <div style="padding:18px 4px 0">
@@ -1586,6 +1718,11 @@ function bindCompareControls() {
     renderCompare();
   }));
 
+  // Synced zoom/pan for side-by-side mode — both maps share one transform state.
+  if (compareState.mode === 'side-by-side') {
+    bindCompareSyncPan();
+  }
+
   // Picker triggers
   document.querySelectorAll('[data-trigger]').forEach(b => b.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -1627,6 +1764,58 @@ function bindCompareControls() {
     const top = document.getElementById("overlay-top");
     if (top) top.style.mixBlendMode = cssBlend(compareState.blend);
   });
+}
+
+// Synced zoom/pan across both Compare panels (side-by-side mode).
+// Both <.compare-syncpan-inner> elements receive the same transform.
+function bindCompareSyncPan() {
+  const panels = $$('.compare-syncpan-inner');
+  if (panels.length < 2) return;
+  const wraps = $$('.compare-syncpan');
+  let z = 1, tx = 0, ty = 0;
+  function apply() {
+    panels.forEach(p => { p.style.transform = `translate(${tx}px, ${ty}px) scale(${z})`; });
+  }
+  apply();
+  // Wheel zoom on either panel
+  wraps.forEach(wrap => {
+    wrap.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const old = z;
+      z = Math.max(0.3, Math.min(6, z * (e.deltaY > 0 ? 0.9 : 1.1)));
+      const rect = wrap.getBoundingClientRect();
+      const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+      tx = cx - (cx - tx) * (z / old);
+      ty = cy - (cy - ty) * (z / old);
+      apply();
+    }, { passive: false });
+  });
+  // Drag-to-pan on either panel
+  let dragging = false, sx = 0, sy = 0;
+  wraps.forEach(wrap => {
+    wrap.style.cursor = 'grab';
+    wrap.addEventListener("mousedown", (e) => {
+      dragging = true; sx = e.clientX - tx; sy = e.clientY - ty;
+      wrap.style.cursor = 'grabbing';
+    });
+  });
+  function onMove(e) { if (!dragging) return; tx = e.clientX - sx; ty = e.clientY - sy; apply(); }
+  function onUp() { dragging = false; wraps.forEach(w => w.style.cursor = 'grab'); }
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup", onUp);
+  // Toolbar buttons
+  $$('[data-syncpan]').forEach(b => b.addEventListener("click", () => {
+    const action = b.dataset.syncpan;
+    if (action === 'in')  z = Math.min(z * 1.4, 6);
+    if (action === 'out') z = Math.max(z / 1.4, 0.3);
+    if (action === 'reset') { z = 1; tx = 0; ty = 0; }
+    apply();
+  }));
+  // Register cleanup so renderRoute can drop the window listeners when leaving Compare
+  _viewerCleanup = () => {
+    window.removeEventListener("mousemove", onMove);
+    window.removeEventListener("mouseup", onUp);
+  };
 }
 
 function overlapRegion(a, b) {
@@ -2498,6 +2687,80 @@ function bindNav() {
     menuBtn?.setAttribute("aria-expanded", "false");
   });
 }
+// ============ Boot-time smoke tests ============
+// Lightweight assertions that catch regressions in core data and helpers.
+// Failures log to console with a clear prefix; the page still loads.
+// Open the console (Cmd+Opt+J on Mac) to see results.
+function runSmokeTests() {
+  const failures = [];
+  const assert = (cond, msg) => { if (!cond) failures.push(msg); };
+
+  // 1. Dataset shape
+  assert(Array.isArray(window.MAPS_RAW), "MAPS_RAW is not an array");
+  assert(window.MAPS_RAW.length >= 1500, `Expected at least 1500 maps, got ${window.MAPS_RAW.length}`);
+
+  // 2. Each map has required fields
+  const sample = window.MAPS_RAW[0];
+  ["id","title","category"].forEach(f => assert(f in sample, `MAPS_RAW[0] missing required field "${f}"`));
+
+  // 3. SVG helper is callable and returns markup
+  if (typeof window.mapSVG === "function") {
+    const svg = window.mapSVG("ancient", 1);
+    assert(typeof svg === "string" && svg.startsWith("<svg"), "mapSVG('ancient', 1) did not return an SVG string");
+  } else {
+    failures.push("window.mapSVG is missing");
+  }
+
+  // 4. Search index was pre-built and is lowercased
+  const m0 = window.MAPS_RAW[0];
+  assert(typeof m0._searchIndex === "string", "_searchIndex was not pre-built at boot");
+  assert(m0._searchIndex === m0._searchIndex.toLowerCase(), "_searchIndex should be lowercased");
+
+  // 5. ERAS classification is wired up
+  assert(typeof eraOfMap === "function", "eraOfMap is missing");
+  const era = eraOfMap({ yearNum: 1500 });
+  assert(era === "renaissance", `eraOfMap(1500) should be 'renaissance', got '${era}'`);
+
+  // 6. parseHash handles query strings
+  const orig = location.hash;
+  location.hash = "#/archive/01_World_Maps?era=renaissance&from=1500";
+  const parsed = parseHash();
+  assert(parsed.page === "archive", `parseHash page wrong: ${parsed.page}`);
+  assert(parsed.param === "01_World_Maps", `parseHash param wrong: ${parsed.param}`);
+  assert(parsed.query.era === "renaissance", `parseHash query.era wrong: ${parsed.query.era}`);
+  assert(parsed.query.from === "1500", `parseHash query.from wrong: ${parsed.query.from}`);
+  location.hash = orig;
+
+  // 7. metadataScore weights curated maps heavily
+  const scoreCurated = metadataScore({ significance: "x", description: "x", yearNum: 1500 });
+  const scoreUncurated = metadataScore({ description: "x", yearNum: 1500 });
+  assert(scoreCurated >= scoreUncurated + 10, "metadataScore should weight curated entries by at least +10");
+
+  // 8. Account API is exposed and has key methods
+  ["isSignedIn","saveMap","unsaveMap","isSaved","recordView","addNote","getNotesFor"].forEach(m => {
+    assert(typeof window.Account?.[m] === "function", `Account.${m}() is missing`);
+  });
+
+  // 9. Curated essay coverage matches AUDIT expectations
+  const curatedCount = window.MAPS_RAW.filter(m => m.significance).length;
+  assert(curatedCount === 40, `Expected exactly 40 curated essays; got ${curatedCount}`);
+
+  if (failures.length) {
+    console.group("%c[Mappa Mundi smoke tests] FAILED", "color: oklch(60% 0.15 25); font-weight: bold");
+    failures.forEach(f => console.warn("✗", f));
+    console.groupEnd();
+  } else {
+    console.log("%c[Mappa Mundi smoke tests] %c✓ all 9 checks passed", "color: oklch(74% 0.11 78); font-weight: bold", "color: oklch(60% 0.06 150)");
+  }
+  return failures.length === 0;
+}
+
+function bindLangToggle() {
+  document.getElementById("lang-toggle")?.addEventListener("click", () => {
+    setLocale(currentLocale() === "es" ? "en" : "es");
+  });
+}
+
 function init() {
   if (!window.MAPS_RAW || !window.MAPS_RAW.length) {
     document.body.innerHTML = '<div style="padding:80px 32px; font-family: var(--serif-body); color: var(--ink);"><h1>Map data failed to load.</h1><p style="margin-top:16px; color: var(--ink-muted)">The maps.js dataset (2 MB) didn\'t reach the page. This is usually a temporary network issue — try refreshing.</p></div>';
@@ -2506,10 +2769,16 @@ function init() {
   if (!window.mapSVG) {
     console.error("mapSVG helper missing; check maps-data.js");
   }
+  // Apply persisted locale before first render
+  document.documentElement.lang = currentLocale();
+  applyStaticI18n();
   bindNav();
+  bindLangToggle();
   bindSearch();
   bindZoomGlobal();
   bindSearchModal();
   renderRoute();
+  // Run smoke tests after the first render (so the hash is whatever the user landed on)
+  setTimeout(runSmokeTests, 100);
 }
 window.addEventListener("DOMContentLoaded", init);
