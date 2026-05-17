@@ -338,14 +338,15 @@ function renderHome() {
       <span class="category-count">${fmt(c.count)} map${c.count===1?"":"s"} · ${c.subtitle}</span>
     </a>`).join("");
 
-  // Recent strip — deterministic daily rotation (matches "Map of the Day" cadence; consistent within a session)
-  const seedPool = MAPS.filter(m => m.renderable && m.description);
+  // Curated essays strip — rotate the 40 fully-essayed maps daily so the home page surfaces different ones each day,
+  // skipping the one already shown as "Map of the day" to avoid duplication.
+  const curatedPool = MAPS.filter(m => m.significance && m.id !== featured.id);
   const day = Math.floor(Date.now() / (1000*60*60*24));
-  const recent = [];
-  for (let i = 0; i < 5 && seedPool.length; i++) {
-    recent.push(seedPool[(day * 7 + i * 53) % seedPool.length]);
+  const curated = [];
+  for (let i = 0; i < 6 && curatedPool.length; i++) {
+    curated.push(curatedPool[(day * 11 + i * 37) % curatedPool.length]);
   }
-  $("#home-recent").innerHTML = recent.map(smallMapTile).join("");
+  $("#home-curated").innerHTML = curated.map(mapCard).join("");
 }
 
 /* ============ ARCHIVE / CATEGORIES ============ */
