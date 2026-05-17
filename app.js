@@ -172,11 +172,13 @@ function imageEl(m, opts = {}) {
 
 function mapCard(m) {
   const y = m.year && m.year !== 'Undated' ? m.year : (m.century !== 'Undated' ? m.century : 'Undated');
+  const curated = !!m.significance;
   return `
-    <a class="map-card" href="#/map/${m.id}">
+    <a class="map-card${curated ? ' map-card-curated' : ''}" href="#/map/${m.id}">
       <div class="map-frame map-frame-img">
         ${imageEl(m)}
         <div class="frame-label">${y}</div>
+        ${curated ? '<div class="curated-badge" title="Curated ficha — includes editorial essay on significance, interpretation and distortions">★ Curated</div>' : ''}
       </div>
       <div class="map-card-body">
         <div class="card-meta">
@@ -342,6 +344,7 @@ const archiveState = {
   language: "All",
   tags: new Set(),          // selected tag strings
   sort: "Oldest dated first",
+  fichaQuality: "all",      // "all" | "full" — show only maps with curated full ficha
   page: 1,
   pageSize: 48,
 };
@@ -580,16 +583,24 @@ function renderCategoryDetail(root, catKey) {
           </div>` : ''}
 
           <div class="filter-block">
+            <span class="eyebrow">Record quality</span>
+            <label class="toggle-row" style="margin-top:10px; cursor:pointer">
+              <input type="checkbox" data-filter="ficha-full" ${archiveState.fichaQuality === 'full' ? 'checked' : ''}/>
+              <span style="font-family:var(--serif-body); font-size:14px; color:var(--ink-dim)">Only curated fichas — maps with a full editorial essay (significance, interpretation, distortions)</span>
+            </label>
+          </div>
+
+          <div class="filter-block">
             <span class="eyebrow">Sort by</span>
             <select class="select" data-filter="sort" id="archive-sort" style="margin-top:8px; width:100%">
               <option ${archiveState.sort==='Oldest dated first'?'selected':''}>Oldest dated first</option>
               <option ${archiveState.sort==='Newest dated first'?'selected':''}>Newest dated first</option>
               <option ${archiveState.sort==='Alphabetical'?'selected':''}>Alphabetical</option>
-              <option ${archiveState.sort==='Most metadata'?'selected':''}>Most metadata</option>
+              <option ${archiveState.sort==='Most metadata'?'selected':''}>Most metadata (curated fichas first)</option>
             </select>
           </div>
 
-          ${archiveState.tags.size || archiveState.era !== 'all' || archiveState.continent !== 'All' || archiveState.language !== 'All' || archiveState.search ? `
+          ${archiveState.tags.size || archiveState.era !== 'all' || archiveState.continent !== 'All' || archiveState.language !== 'All' || archiveState.search || archiveState.fichaQuality !== 'all' ? `
             <button class="btn btn-sm" id="clear-all-filters" style="margin-top:8px">Clear all filters</button>
           ` : ''}
         </aside>
@@ -636,6 +647,7 @@ function activeFilterChips() {
   if (archiveState.continent !== "All") chips.push({ k:"__continent", label:`Continent: ${archiveState.continent}` });
   if (archiveState.language !== "All") chips.push({ k:"__language", label:`Language: ${archiveState.language}` });
   archiveState.tags.forEach(t => chips.push({ k:`__tag:${t}`, label:`Tag: ${t}` }));
+  if (archiveState.fichaQuality === "full") chips.push({ k:"__ficha", label:`Only curated fichas` });
   return chips;
 }
 
@@ -654,6 +666,7 @@ function filterMaps(opts = {}) {
   if (archiveState.continent !== "All") list = list.filter(m => m.continent === archiveState.continent);
   if (archiveState.language !== "All") list = list.filter(m => m.language === archiveState.language);
   if (archiveState.tags.size) list = list.filter(m => [...archiveState.tags].every(t => (m.tags||[]).includes(t)));
+  if (archiveState.fichaQuality === "full") list = list.filter(m => !!m.significance);
 
   switch (archiveState.sort) {
     case "Oldest dated first":
@@ -684,7 +697,9 @@ function filterMaps(opts = {}) {
   return list;
 }
 function metadataScore(m) {
-  return (m.description?1:0) + (m.historical_context?1:0) + (m.author?1:0) + (m.region?1:0) + (m.country?1:0) + (m.continent?1:0) + (m.tags?.length?1:0) + (m.related_events?.length?1:0) + (m.yearNum!==null?2:0);
+  // Curated fichas (with full essay set) score heavily so they surface first
+  const curated = m.significance ? 10 : 0;
+  return curated + (m.description?1:0) + (m.historical_context?1:0) + (m.author?1:0) + (m.region?1:0) + (m.country?1:0) + (m.continent?1:0) + (m.tags?.length?1:0) + (m.related_events?.length?1:0) + (m.yearNum!==null?2:0);
 }
 
 function wireResultControls() {
@@ -699,6 +714,12 @@ function wireResultControls() {
       renderArchive();
     });
   });
+  // Ficha-quality checkbox
+  $$('input[data-filter="ficha-full"]').forEach(cb => cb.addEventListener("change", (e) => {
+    archiveState.fichaQuality = e.target.checked ? "full" : "all";
+    archiveState.page = 1;
+    renderArchive();
+  }));
   // Era radios
   $$('input[name="era"]').forEach(r => r.addEventListener("change", (e) => {
     archiveState.era = e.target.value;
@@ -721,6 +742,7 @@ function wireResultControls() {
     else if (k === "__era") archiveState.era = "all";
     else if (k === "__continent") archiveState.continent = "All";
     else if (k === "__language") archiveState.language = "All";
+    else if (k === "__ficha") archiveState.fichaQuality = "all";
     else if (k.startsWith("__tag:")) archiveState.tags.delete(k.slice(6));
     archiveState.page = 1;
     renderArchive();
@@ -758,6 +780,7 @@ function clearAllFilters() {
   archiveState.continent = "All";
   archiveState.language = "All";
   archiveState.tags = new Set();
+  archiveState.fichaQuality = "all";
   archiveState.page = 1;
   renderArchive();
 }

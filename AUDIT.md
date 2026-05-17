@@ -191,3 +191,34 @@ La función `renderMapDetail()` en `app.js` ahora muestra estas secciones condic
 
 - Total de mapas: **1.561 → 1.559** tras eliminar dos entradas que no eran mapas (una foto de edificio de la MGU rusa y una entrada de leyenda de símbolos cartográficos GOST). Las cifras en el hero del Home y el placeholder del search modal se actualizaron en consecuencia.
 - 7 mapas con scripts no-latinos auditados; 2 traducidos al inglés con título original preservado, 2 eliminados (no son mapas), 3 ya tenían contexto en inglés y se dejan tal cual.
+
+
+---
+
+## Iteración 2 — todo aplicado en orden (commit `<next>`)
+
+### A. 6 fichas curadas restantes — COMPLETO
+Las últimas seis fichas (`seed_012` Catalan Atlas, `seed_044` Natural Earth shaded relief, `seed_045` Natural Earth Admin 0, `seed_050` modern Köppen, `seed_051` Vinland Map *con caveat de falsificación*, `seed_055` USGS Plate Tectonics) ahora tienen ensayo completo (significance, interpretation, meaning, biases).
+
+**Cobertura final: 40 / 40 fichas curadas.**
+
+### B. Segunda pasada de recategorización
+Reglas más finas aplicadas:
+- **→ Renaissance Maps**: cartógrafos del periodo (Blaeu, Ortelius, Hondius, Mercator, Jansson, Braun & Hogenberg, Visscher, Speed).
+- **→ Colonial Maps**: keywords (New Spain, Nueva España, New France, viceroyalty, British Raj, Dutch East Indies, Cape Colony, Gold Coast, etc.).
+- **→ Medieval Maps**: T-O, mappa mundi, Isidore, Beatus.
+- **→ Climate Maps**: climate map/classification, isotherm, Köppen.
+- **→ Geological & Scientific**: geological atlas/survey, bedrock, soil map.
+- **→ Topographic Maps**: USGS quadrangle, 7.5-minute, shaded relief.
+- **→ Artistic & Imaginary**: Leo Belgicus, satirical/allegorical map, caricature map, imaginary, fantasy.
+- **→ Indigenous Cartographies**: indigenous, first nations, aboriginal, songline, tribal map, native land, Aztec map, Maya map.
+
+**Total Phase 2: 50 movimientos.** Más 15 correcciones automáticas para los falsos positivos donde el patrón "mercator" capturó mapas posteriores a 1700 que usan la proyección pero no fueron hechos por Mercator. Esos 15 fueron reasignados a Empires & Borders, Colonial Maps, Modern Reference Maps o World Maps según su contenido.
+
+### C. Filtro "Curated ficha only" + badge visual
+Tres mejoras de UX:
+- **Filtro de calidad de ficha** en el sidebar de cada categoría: checkbox "Only curated fichas" muestra solo los mapas con ensayos completos (los 40 `seed_*`).
+- **Badge "★ Curated"** en la esquina superior derecha de cada tarjeta cuando el mapa tiene ficha completa. Borde dorado también marca las tarjetas curadas.
+- **Sort "Most metadata"** ahora pondera fuertemente la presencia de `significance` (×10), de modo que las fichas curadas siempre suben primero.
+
+Chip activo "Only curated fichas" aparece sobre el grid cuando el filtro está activado, y "Clear all filters" lo resetea como los otros.
