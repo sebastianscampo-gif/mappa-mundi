@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Mappa Mundi — A Digital Archive of Maps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter+Tight:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+<link rel="stylesheet" href="styles-pages.css"/>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#/home">
+      <span class="brand-glyph"></span>
+      <span>Mappa Mundi</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" data-page="home" href="#/home">Home</a>
+      <a class="nav-link" data-page="archive" href="#/archive">Categories</a>
+      <a class="nav-link" data-page="timeline" href="#/timeline">Timeline</a>
+      <a class="nav-link" data-page="compare" href="#/compare">Compare</a>
+      <a class="nav-link" data-page="collections" href="#/collections">Collections</a>
+      <a class="nav-link" data-page="learn" href="#/learn">Learn</a>
+      <a class="nav-link" data-page="about" href="#/about">About</a>
+      <a class="nav-link" data-page="library" href="#/library">Library</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-btn" id="global-search-btn" title="Search">
+        <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+      </button>
+      <div id="nav-account-slot" class="nav-account-slot"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ HOME ============ -->
+<section class="page" id="page-home" data-screen-label="Home">
+  <div class="hero">
+    <div class="hero-bg">
+      <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="hg" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="#3a2d1d"/>
+            <stop offset="100%" stop-color="#15110b"/>
+          </radialGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#hg)"/>
+        <g stroke="#8a6f3e" stroke-width="0.6" fill="none" opacity="0.55">
+          <ellipse cx="800" cy="450" rx="760" ry="380"/>
+          <ellipse cx="800" cy="450" rx="640" ry="300"/>
+          <ellipse cx="800" cy="450" rx="520" ry="220"/>
+          <ellipse cx="800" cy="450" rx="380" ry="140"/>
+          <ellipse cx="800" cy="450" rx="240" ry="80"/>
+        </g>
+        <g stroke="#8a6f3e" stroke-width="0.5" fill="none" opacity="0.4">
+          <line x1="800" y1="50" x2="800" y2="850"/>
+          <line x1="40" y1="450" x2="1560" y2="450"/>
+          <line x1="200" y1="100" x2="1400" y2="800"/>
+          <line x1="1400" y1="100" x2="200" y2="800"/>
+        </g>
+        <g fill="#7c5d34" opacity="0.5">
+          <path d="M340 320 Q420 280 540 320 T740 350 Q760 410 700 460 T540 470 Q420 460 360 420 T340 320 Z"/>
+          <path d="M860 360 Q1020 340 1180 380 T1320 460 Q1280 520 1180 540 T960 520 Q860 480 860 360 Z"/>
+          <path d="M500 540 Q620 530 740 560 T880 620 Q820 680 720 690 T560 660 Q480 620 500 540 Z"/>
+        </g>
+        <g fill="#bda270" opacity="0.7">
+          <circle cx="420" cy="380" r="2"/><circle cx="600" cy="410" r="2"/><circle cx="720" cy="370" r="2"/>
+          <circle cx="980" cy="420" r="2"/><circle cx="1150" cy="440" r="2"/>
+          <circle cx="640" cy="600" r="2"/><circle cx="780" cy="640" r="2"/>
+        </g>
+      </svg>
+    </div>
+    <div class="hero-inner">
+      <div class="eyebrow">Est. MMXXIV — A Digital Atlas of Cartography</div>
+      <h1 style="margin-top:18px">Mappa <em>Mundi</em></h1>
+      <p class="subtitle">Explore the history of the world through maps.</p>
+      <div class="search hero-search" id="hero-search">
+        <svg class="i i-lg" viewBox="0 0 24 24" style="color:var(--ink-muted)"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+        <input placeholder="Search maps, places, periods, empires, climates…"/>
+        <span class="kbd">⌘ K</span>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="num">1,561</div><div class="lbl">Maps catalogued</div></div>
+        <div class="hero-stat"><div class="num">16</div><div class="lbl">Archive categories</div></div>
+        <div class="hero-stat"><div class="num">25+</div><div class="lbl">Source institutions</div></div>
+        <div class="hero-stat"><div class="num">21</div><div class="lbl">Centuries covered</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories -->
+  <div class="container section">
+    <div class="spread" style="margin-bottom: 28px">
+      <div>
+        <span class="eyebrow">Explore by category</span>
+        <h2 style="margin-top:14px">Quick access</h2>
+      </div>
+      <a class="btn btn-ghost" href="#/archive">Open the full archive →</a>
+    </div>
+    <div class="category-strip" id="home-category-strip"></div>
+  </div>
+
+  <!-- Featured map of the day -->
+  <div class="container section-tight">
+    <div id="home-featured"></div>
+  </div>
+
+  <!-- Featured collections -->
+  <div class="container section-tight">
+    <div class="spread" style="margin-bottom: 28px">
+      <div>
+        <span class="eyebrow">Curated</span>
+        <h2 style="margin-top:14px">Featured collections</h2>
+      </div>
+      <a class="btn btn-ghost" href="#/collections">All collections →</a>
+    </div>
+    <div class="grid-cards-lg grid-cards" id="home-collections"></div>
+  </div>
+
+  <!-- Recently added -->
+  <div class="container section-tight" style="padding-bottom: 96px">
+    <div class="spread" style="margin-bottom: 24px">
+      <div>
+        <span class="eyebrow">New to the archive</span>
+        <h2 style="margin-top:14px">Recently added</h2>
+      </div>
+      <a class="btn btn-ghost" href="#/archive">View all →</a>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px" id="home-recent"></div>
+  </div>
+</section>
+
+<!-- ============ ARCHIVE / CATEGORIES ============ -->
+<section class="page" id="page-archive" data-screen-label="Categories">
+  <div id="archive-content"></div>
+</section>
+
+<!-- ============ ZOOM MODAL ============ -->
+<div id="zoom-modal" class="zoom-modal" role="dialog" aria-modal="true" aria-labelledby="zoom-title">
+  <div class="zoom-modal-bar">
+    <div class="zoom-modal-info">
+      <div id="zoom-title"></div>
+      <div id="zoom-meta" class="meta"></div>
+    </div>
+    <div class="row" style="gap:8px">
+      <span id="zoom-source"></span>
+      <button id="zoom-close" class="icon-btn" title="Close (Esc)">
+        <svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="zoom-stage" class="zoom-modal-stage"></div>
+  <div class="zoom-modal-hint meta">Scroll to zoom · drag to pan · press Esc to close</div>
+</div>
+
+<!-- ============ SEARCH MODAL ============ -->
+<div id="search-modal" class="search-modal" role="dialog" aria-modal="true">
+  <div class="search-modal-inner">
+    <div class="search-modal-bar">
+      <svg class="i i-lg" viewBox="0 0 24 24" style="color:var(--ink-muted)"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+      <input id="search-modal-input" placeholder="Search 1,561 maps — by title, place, cartographer, era, language, or tag…" autocomplete="off"/>
+      <span class="kbd">esc</span>
+      <button id="search-modal-close" class="icon-btn" style="margin-left:auto">
+        <svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+      </button>
+    </div>
+    <div id="search-modal-results" class="search-modal-results"></div>
+  </div>
+</div>
+
+<!-- ============ MAP DETAIL ============ -->
+<section class="page" id="page-map" data-screen-label="Map Detail">
+  <div id="map-detail-root"></div>
+</section>
+
+<!-- ============ TIMELINE ============ -->
+<section class="page" id="page-timeline" data-screen-label="Timeline">
+  <div class="container">
+    <div style="padding: 72px 0 24px; max-width: 880px;">
+      <span class="eyebrow">Timeline</span>
+      <h1 style="margin-top:18px">Maps across history.</h1>
+      <p class="lede" style="margin-top:18px">Five thousand years of cartography, organised by the questions each era was trying to answer. Scroll to move forward through time; each period shows a sample of representative maps with a short historical note.</p>
+    </div>
+    <div class="timeline" id="timeline-root"></div>
+  </div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section class="page" id="page-compare" data-screen-label="Compare">
+  <div id="compare-root"></div>
+</section>
+
+<!-- ============ COLLECTIONS ============ -->
+<section class="page" id="page-collections" data-screen-label="Collections">
+  <div class="container">
+    <div style="padding: 72px 0 0; max-width: 880px;">
+      <span class="eyebrow">Curated</span>
+      <h1 style="margin-top:18px">Collections.</h1>
+      <p class="lede" style="margin-top:18px">Themed groupings of maps, each with an introductory essay. Collections are how we try to make sense of a long archive: not by exhaustion, but by argument.</p>
+    </div>
+    <div class="collections-list" id="collections-root"></div>
+  </div>
+</section>
+
+<!-- ============ LEARN ============ -->
+<section class="page" id="page-learn" data-screen-label="Learn">
+  <div class="container">
+    <div style="padding: 72px 0 48px; max-width: 880px;">
+      <span class="eyebrow">Learn</span>
+      <h1 style="margin-top:18px">Reading maps as history.</h1>
+      <p class="lede" style="margin-top:18px">Essays, primers, and case studies on the history of cartography — how maps are made, what they hide, and what they do in the world.</p>
+    </div>
+    <div class="articles-grid" id="learn-root"></div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="page" id="page-about" data-screen-label="About">
+  <div class="container">
+    <div class="about-hero">
+      <span class="eyebrow">About Mappa Mundi</span>
+      <h1 style="margin-top:22px">A digital museum<br/>of maps.</h1>
+      <p class="lede" style="margin-top:28px; max-width: 60ch; margin-inline:auto">
+        Mappa Mundi exists to make the world's cartographic record legible, searchable, and contextualized — for the student writing their first essay, the teacher building a lesson, the researcher tracing a primary source, the designer mining the archive for visual ideas, and the curious traveler who simply wants to know how the place they live was once drawn.
+      </p>
+    </div>
+
+    <section class="about-section">
+      <div class="about-grid">
+        <h3>The mission</h3>
+        <div>
+          <p>Maps are not transparent. They are arguments — made by particular people, in particular places, for particular reasons. Mappa Mundi was built on the conviction that a map is most useful when you can see who drew it, what they were trying to do, and what they chose to leave out.</p>
+          <p style="margin-top:16px">Every map in the archive is accompanied by a short essay covering its historical context, its scientific or political meaning, its known distortions, and the events surrounding its making. We treat the archive as a teaching collection, not a wallpaper library.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-grid">
+        <h3>Who it's for</h3>
+        <div class="audience-grid">
+          <div class="audience"><span class="meta">For</span><h4>Students</h4><p>Primary sources, with context. Citation-ready records for every map.</p></div>
+          <div class="audience"><span class="meta">For</span><h4>Teachers</h4><p>Lesson-ready collections and side-by-side comparison tools.</p></div>
+          <div class="audience"><span class="meta">For</span><h4>Researchers</h4><p>Provenance, source institutions, and cross-references between maps.</p></div>
+          <div class="audience"><span class="meta">For</span><h4>Designers</h4><p>A working visual library of historical cartographic conventions.</p></div>
+          <div class="audience"><span class="meta">For</span><h4>Historians</h4><p>Time-period filters and curated essays on cartographic history.</p></div>
+          <div class="audience"><span class="meta">For</span><h4>Travelers</h4><p>How the places you visit were drawn, by whom, and why.</p></div>
+          <div class="audience"><span class="meta">For</span><h4>Curious users</h4><p>One map a day, with a short story behind it.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-grid">
+        <h3>Sources &amp; accuracy</h3>
+        <div>
+          <p>Mappa Mundi draws on the digital collections of 187 institutions, including the Library of Congress, the Bibliothèque nationale de France, the David Rumsey Map Collection, the Boston Public Library's Norman B. Leventhal Map Center, the Topkapı Palace Museum archives, and the Survey of India.</p>
+          <p style="margin-top:16px">Every record cites its source institution and accession number. Essays are written by a small editorial team and reviewed by external specialists; we mark works-in-progress visibly, and we publish corrections in a public changelog.</p>
+          <p style="margin-top:16px">The archive is not neutral, and we don't pretend that it is. A map collected here is a map we consider worth thinking about — including, especially, the maps we disagree with.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-grid">
+        <h3>Educational use</h3>
+        <div>
+          <p>All records on Mappa Mundi are free to consult. Maps reproduced under licence from source institutions are marked accordingly; public-domain works are downloadable at archival resolution.</p>
+          <p style="margin-top:16px">Institutional partnerships, lesson-plan submissions, and corrections are welcome at <span style="color:var(--gold)">editors@mappamundi.archive</span>.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<!-- ============ ACCOUNT ============ -->
+<section class="page" id="page-account" data-screen-label="Account">
+  <div id="account-content"></div>
+</section>
+
+<!-- ============ LIBRARY ============ -->
+<section class="page" id="page-library" data-screen-label="Library">
+  <div class="container">
+    <div style="padding: 72px 0 0">
+      <span class="eyebrow">Your Library</span>
+      <h1 style="margin-top:18px">Saved, read, written.</h1>
+      <p class="lede" style="margin-top:18px; max-width: 62ch">Maps you've saved, places you've recently visited in the archive, your private collections, and the notes you've written along the way.</p>
+    </div>
+
+    <div class="library-tabs" style="margin-top: 48px">
+      <span class="library-tab active">Saved maps</span>
+      <span class="library-tab">Recently viewed</span>
+      <span class="library-tab">My collections</span>
+      <span class="library-tab">Notes</span>
+      <span class="library-tab">Offline</span>
+    </div>
+
+    <div class="stack-24" style="padding-bottom: 80px">
+      <div>
+        <div class="spread" style="margin-bottom:18px">
+          <h3>Saved maps</h3>
+          <span class="meta">4 maps</span>
+        </div>
+        <div class="grid-cards" id="library-saved"></div>
+      </div>
+
+      <div style="margin-top: 56px">
+        <div class="spread" style="margin-bottom:18px">
+          <h3>Recently viewed</h3>
+          <span class="meta">Last 7 days</span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px" id="library-recent"></div>
+      </div>
+
+      <div style="margin-top: 56px">
+        <div class="spread" style="margin-bottom:18px">
+          <h3>My notes</h3>
+          <span class="meta">3 notes</span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px" id="library-notes"></div>
+      </div>
+
+      <div style="margin-top: 56px">
+        <div class="spread" style="margin-bottom:18px">
+          <h3>My collections</h3>
+          <span class="meta">2 collections</span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px">
+          <a class="collection-card" href="#/collections">
+            <div class="map-frame" style="aspect-ratio: 5/3; padding: 18px; display:flex; align-items:flex-end">
+              <div style="font-family:var(--serif-display); font-size:32px; color:var(--gold); line-height:1.05">For my dissertation on<br/>Ottoman cartography</div>
+            </div>
+            <div class="collection-body">
+              <span class="meta">17 maps · created 12 Jan 2026</span>
+              <h3 style="margin-top:6px">Ottoman cartography, 1500–1700</h3>
+            </div>
+          </a>
+          <a class="collection-card" href="#/collections">
+            <div class="map-frame" style="aspect-ratio: 5/3; padding: 18px; display:flex; align-items:flex-end">
+              <div style="font-family:var(--serif-display); font-size:32px; color:var(--gold); line-height:1.05">Climate maps for<br/>spring lecture series</div>
+            </div>
+            <div class="collection-body">
+              <span class="meta">9 maps · created 03 Mar 2026</span>
+              <h3 style="margin-top:6px">Climate cartography teaching set</h3>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container-wide">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="#/home" style="margin-bottom:16px">
+          <span class="brand-glyph"></span>
+          <span>Mappa Mundi</span>
+        </a>
+        <p style="margin-top:16px; max-width: 32ch; font-family: var(--serif-body); font-size: 14px; line-height:1.6; color: var(--ink-muted)">
+          A digital archive of historical and contemporary cartography. An independent, educational project — not affiliated with any single institution.
+        </p>
+      </div>
+      <div>
+        <h5>Explore</h5>
+        <ul>
+          <li><a href="#/archive">Full archive</a></li>
+          <li><a href="#/timeline">Timeline</a></li>
+          <li><a href="#/collections">Collections</a></li>
+          <li><a href="#/compare">Compare tool</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Learn</h5>
+        <ul>
+          <li><a href="#/learn">Articles</a></li>
+          <li><a href="#/learn">For teachers</a></li>
+          <li><a href="#/learn">For students</a></li>
+          <li><a href="#/about">Editorial policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Archive</h5>
+        <ul>
+          <li><a href="#/about">Sources &amp; partners</a></li>
+          <li><a href="#/about">Accuracy &amp; corrections</a></li>
+          <li><a href="#/about">Reproduction rights</a></li>
+          <li><a href="#/about">Submit a map</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>The Project</h5>
+        <ul>
+          <li><a href="#/about">About</a></li>
+          <li><a href="#/about">Editors</a></li>
+          <li><a href="#/about">Contact</a></li>
+          <li><a href="#/about">Changelog</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Mappa Mundi · MMXXIV–MMXXVI · An open archive</span>
+      <span>Latitudes are decimal · Bearings are true · South is sometimes up</span>
+    </div>
+    <div class="footer-attribution">
+      Images sourced from <strong>Wikimedia Commons</strong>, the <strong>Library of Congress</strong> (Geography &amp; Map Division), the <strong>Bibliothèque nationale de France</strong> (Gallica), the <strong>Internet Archive</strong>, <strong>Natural Earth</strong>, <strong>USGS</strong> and <strong>NASA</strong>. All maps are distributed under open licenses — public domain or Creative Commons. Where the source institution requires attribution, it appears on the map's detail page.
+    </div>
+  </div>
+</footer>
+
+<!-- Real archive dataset (1,561 maps) — exposes window.MAPS_RAW -->
+<script src="maps.js"></script>
+<!-- SVG placeholder generators (used as image-load fallback) — exposes window.mapSVG -->
+<script src="maps-data.js"></script>
+<!-- Account / auth state — exposes window.Account -->
+<script src="account.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
