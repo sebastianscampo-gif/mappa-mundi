@@ -48,6 +48,14 @@ const LANG = {
     "detail.save":"Save to library","detail.saved":"Saved","detail.compare":"Compare",
     "detail.fullscreen":"Open full screen","detail.note":"Add note","detail.source.btn":"View source",
     "skip.main":"Skip to main content","footer.tagline":"An independent, educational project.",
+    "footer.tagline-long":"A digital archive of historical and contemporary cartography. An independent, educational project — not affiliated with any single institution.",
+    "footer.explore":"Explore","footer.archive":"Full archive","footer.atlas":"Atlas (meta-map)",
+    "footer.timeline":"Timeline","footer.compare":"Compare tool","footer.collections":"Collections",
+    "footer.learn":"Learn","footer.articles":"Articles","footer.glossary":"Glossary",
+    "footer.about-h":"About","footer.mission":"Mission","footer.stats":"Archive at a glance",
+    "footer.sources":"Sources & accuracy","footer.educational":"Educational use",
+    "footer.open":"An open archive",
+    "footer.coords":"Latitudes are decimal · Bearings are true · South is sometimes up",
     "lang.toggle":"Español",
   },
   es: {
@@ -83,6 +91,14 @@ const LANG = {
     "detail.save":"Guardar en la biblioteca","detail.saved":"Guardado","detail.compare":"Comparar",
     "detail.fullscreen":"Pantalla completa","detail.note":"Añadir nota","detail.source.btn":"Ver fuente",
     "skip.main":"Saltar al contenido principal","footer.tagline":"Un proyecto independiente y educativo.",
+    "footer.tagline-long":"Un archivo digital de cartografía histórica y contemporánea. Un proyecto independiente y educativo, no afiliado a ninguna institución concreta.",
+    "footer.explore":"Explorar","footer.archive":"Archivo completo","footer.atlas":"Atlas (meta-mapa)",
+    "footer.timeline":"Cronología","footer.compare":"Herramienta de comparación","footer.collections":"Colecciones",
+    "footer.learn":"Aprender","footer.articles":"Artículos","footer.glossary":"Glosario",
+    "footer.about-h":"Acerca de","footer.mission":"Misión","footer.stats":"El archivo en cifras",
+    "footer.sources":"Fuentes y precisión","footer.educational":"Uso educativo",
+    "footer.open":"Un archivo abierto",
+    "footer.coords":"Latitudes en decimal · Rumbos verdaderos · El sur a veces va arriba",
     "lang.toggle":"English",
   },
 };
@@ -438,7 +454,16 @@ function renderRoute() {
   if (page === "collections") renderCollections();
   if (page === "learn") renderLearn();
   if (page === "library") renderLibrary();
-  if (page === "about") renderAbout();
+  if (page === "about") {
+    renderAbout();
+    // If the URL has ?section=ID, scroll to that section after the page paints.
+    if (query.section) {
+      requestAnimationFrame(() => {
+        const target = document.getElementById(query.section);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
   if (page === "article") renderArticle(param);
   if (page === "glossary") renderGlossary();
   if (page === "atlas") renderAtlas();
