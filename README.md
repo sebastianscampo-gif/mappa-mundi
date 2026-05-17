@@ -1,25 +1,29 @@
-# CODING AGENTS: READ THIS FIRST
+# Mappa Mundi
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+A digital archive of historical and contemporary cartography — 1,559 maps from the Library of Congress, Wikimedia Commons, Natural Earth, USGS, the Bibliothèque nationale de France, and other open collections.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+## What's in this repo
 
-## What you should do — IMPORTANT
+Pure static HTML/CSS/JS — no build step.
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+- `index.html` — main entry point
+- `app.js` — application logic, hash routing, all page rendering
+- `maps.js` — the dataset (1,559 records)
+- `maps-data.js` — SVG fallback generators (used when an image can't load)
+- `account.js` — client-side auth + saved maps + history + notes (localStorage only)
+- `styles.css`, `styles-pages.css` — design system and page styles
+- `AUDIT.md` — content audit report (issues found, fixes applied, pending work)
 
-**Read `project/index.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+## Run locally
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+```bash
+python3 -m http.server 8000
+```
 
-## About the design files
+Then open `http://localhost:8000`.
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+## License
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+Application code: yours.
 
-## Bundle contents
-
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Mappa Mundi` project files (HTML prototypes, assets, components)
+Map images: each map's record links to its source institution. All maps are distributed under open licences — public domain or Creative Commons. Attribution requirements (where applicable) appear on the map's detail page.

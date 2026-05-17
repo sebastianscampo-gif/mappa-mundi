@@ -1,6 +1,6 @@
 /* ============ Mappa Mundi — app.js ============ */
 /*
- *  Uses real dataset window.MAPS_RAW (1,561 maps) loaded from maps.js
+ *  Uses real dataset window.MAPS_RAW (1,559 maps) loaded from maps.js
  *  Falls back to SVG placeholders (window.mapSVG) when image fails.
  */
 
@@ -110,7 +110,7 @@ MAPS.forEach(m => {
   if (!MAPS_BY_CATEGORY[m.category]) MAPS_BY_CATEGORY[m.category] = [];
   MAPS_BY_CATEGORY[m.category].push(m);
   // Pre-built search index: concatenate every searchable field once, lowercased.
-  // Avoids reassembling the same string for 1,561 maps on every keystroke in filterMaps().
+  // Avoids reassembling the same string for 1,559 maps on every keystroke in filterMaps().
   m._searchIndex = (
     (m.title || "") + " " +
     (m.original_title || "") + " " +
@@ -866,6 +866,26 @@ function renderMapDetail(id) {
           <h3>How this map came to be made</h3>
           <p>${m.historical_context}</p>
         </section>` : ''}
+        ${m.interpretation ? `<section>
+          <span class="eyebrow">Reading the map</span>
+          <h3>What the map reveals</h3>
+          <p>${m.interpretation}</p>
+        </section>` : ''}
+        ${m.significance ? `<section>
+          <span class="eyebrow">Why it matters</span>
+          <h3>Significance</h3>
+          <p>${m.significance}</p>
+        </section>` : ''}
+        ${m.meaning ? `<section>
+          <span class="eyebrow">Meaning</span>
+          <h3>Political, cultural, or scientific stakes</h3>
+          <p>${m.meaning}</p>
+        </section>` : ''}
+        ${m.biases ? `<section class="detail-bias">
+          <span class="eyebrow" style="color:var(--terracotta)">Distortions &amp; limitations</span>
+          <h3 style="margin-top:8px">What this map gets wrong, or leaves out</h3>
+          <p style="margin-top:10px">${m.biases}</p>
+        </section>` : ''}
         ${(m.tags && m.tags.length) ? `<section>
           <span class="eyebrow">Themes &amp; tags</span>
           <h3>Threads in the archive</h3>
@@ -1357,14 +1377,14 @@ function renderCollections() {
 
 /* ============ LEARN ============ */
 const ARTICLES = [
-  { title:"Why old maps are not just inaccurate versions of modern maps", read:"14 min", topic:"Foundations", style:"medieval", excerpt:"Treating Ptolemy as a failed Google Maps is the surest way to misread him. Old maps were answering different questions — and often answering them well." },
-  { title:"How maps create political power", read:"22 min", topic:"Power", style:"imperial", excerpt:"A line on a map is rarely just descriptive. From the Treaty of Tordesillas onward, drawn boundaries have produced the very territories they claim to record." },
-  { title:"How empires used maps", read:"18 min", topic:"Empire", style:"colonial", excerpt:"Cadastral surveys, treaty atlases, railway concession maps. The infrastructure of empire was, in large part, made of paper." },
-  { title:"How climate maps changed science", read:"16 min", topic:"Science", style:"climate", excerpt:"Köppen's vegetation-derived climate classes were a quiet revolution: a way to make the atmosphere legible by treating plants as instruments." },
-  { title:"The history of topographic maps", read:"20 min", topic:"Method", style:"topo", excerpt:"Triangulation, plane-tabling, aerial photography, lidar. Topography is a story of measuring devices, not just of mountains." },
-  { title:"How artistic maps represent imagined worlds", read:"12 min", topic:"Imagination", style:"artistic", excerpt:"The compass rose, the scale bar, the frame — cartographic conventions are persuasive even when the territory is wholly invented." },
-  { title:"Reading the silences in a colonial map", read:"19 min", topic:"Critique", style:"colonial", excerpt:"What a map omits is often a clearer political statement than what it includes. A short guide to reading the gaps." },
-  { title:"Indigenous counter-mapping in the 21st century", read:"21 min", topic:"Practice", style:"indigenous", excerpt:"How communities are using GIS, GPS, and oral history to remap territories that the colonial archive has long misrepresented." },
+  { title:"Why old maps are not just inaccurate versions of modern maps", status:"Draft outline", topic:"Foundations", style:"medieval", excerpt:"Treating Ptolemy as a failed Google Maps is the surest way to misread him. Old maps were answering different questions — and often answering them well." },
+  { title:"How maps create political power", status:"Draft outline", topic:"Power", style:"imperial", excerpt:"A line on a map is rarely just descriptive. From the Treaty of Tordesillas onward, drawn boundaries have produced the very territories they claim to record." },
+  { title:"How empires used maps", status:"Draft outline", topic:"Empire", style:"colonial", excerpt:"Cadastral surveys, treaty atlases, railway concession maps. The infrastructure of empire was, in large part, made of paper." },
+  { title:"How climate maps changed science", status:"Draft outline", topic:"Science", style:"climate", excerpt:"Köppen's vegetation-derived climate classes were a quiet revolution: a way to make the atmosphere legible by treating plants as instruments." },
+  { title:"The history of topographic maps", status:"Draft outline", topic:"Method", style:"topo", excerpt:"Triangulation, plane-tabling, aerial photography, lidar. Topography is a story of measuring devices, not just of mountains." },
+  { title:"How artistic maps represent imagined worlds", status:"Draft outline", topic:"Imagination", style:"artistic", excerpt:"The compass rose, the scale bar, the frame — cartographic conventions are persuasive even when the territory is wholly invented." },
+  { title:"Reading the silences in a colonial map", status:"Draft outline", topic:"Critique", style:"colonial", excerpt:"What a map omits is often a clearer political statement than what it includes. A short guide to reading the gaps." },
+  { title:"Indigenous counter-mapping in the 21st century", status:"Draft outline", topic:"Practice", style:"indigenous", excerpt:"How communities are using GIS, GPS, and oral history to remap territories that the colonial archive has long misrepresented." },
 ];
 
 function renderLearn() {
@@ -1374,11 +1394,11 @@ function renderLearn() {
       <div class="article-body">
         <div class="meta-row">
           <span class="meta">${a.topic}</span><span class="dot"></span>
-          <span class="meta">${a.read} read</span>
+          <span class="meta">${a.status}</span>
         </div>
         <h3 style="margin-top:12px">${a.title}</h3>
         <p style="margin-top:14px; color:var(--ink-dim)">${a.excerpt}</p>
-        <a class="link-underline" style="margin-top:18px; display:inline-block; color:var(--gold); font-family:var(--sans); font-size:13px; letter-spacing:0.05em">Read article →</a>
+        <span class="meta" style="margin-top:18px; display:inline-block; color:var(--ink-faint); font-style:italic">Full article forthcoming</span>
       </div>
     </article>
   `).join("");
@@ -2014,7 +2034,7 @@ function runSearchModal(q) {
         </a>
       `).join("") : `<p class="sm-empty">No maps match "${q}".</p>`}
     </div>
-  ` : `<p class="sm-empty">Start typing to search across all 1,561 maps — by title, place, cartographer, era, language, or tag.</p>`;
+  ` : `<p class="sm-empty">Start typing to search across all 1,559 maps — by title, place, cartographer, era, language, or tag.</p>`;
   $$('[data-close]').forEach(el => el.addEventListener("click", closeSearchModal));
   $$('[data-era-jump]').forEach(el => el.addEventListener("click", () => {
     archiveState.era = el.dataset.eraJump;
