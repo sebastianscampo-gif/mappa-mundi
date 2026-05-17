@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#1a160f"/>
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#bda270" stroke-width="2"/>
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#8a6f3e" stroke-width="1"/>
+  <!-- compass points -->
+  <path d="M32 8 L36 32 L32 28 L28 32 Z" fill="#bda270"/>
+  <path d="M32 56 L36 32 L32 36 L28 32 Z" fill="#7c5d34"/>
+  <path d="M8 32 L32 36 L28 32 L32 28 Z" fill="#7c5d34"/>
+  <path d="M56 32 L32 36 L36 32 L32 28 Z" fill="#7c5d34"/>
+  <circle cx="32" cy="32" r="3" fill="#bda270"/>
+</svg>

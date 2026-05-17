@@ -24,6 +24,7 @@ const LANG = {
     "hero.placeholder":"Search maps, places, periods, empires, climates…",
     "hero.stat.maps":"Maps catalogued","hero.stat.cats":"Archive categories",
     "hero.stat.inst":"Source institutions","hero.stat.cents":"Centuries covered",
+    "hero.surprise":"Surprise me with a curated map",
     "home.cats.eyebrow":"Explore by category","home.cats.title":"Quick access","home.cats.cta":"Open the full archive →",
     "home.coll.eyebrow":"Curated","home.coll.title":"Featured collections","home.coll.cta":"All collections →",
     "home.curated.eyebrow":"Start here","home.curated.title":"Curated essays",
@@ -58,6 +59,7 @@ const LANG = {
     "hero.placeholder":"Buscar mapas, lugares, periodos, imperios, climas…",
     "hero.stat.maps":"Mapas catalogados","hero.stat.cats":"Categorías del archivo",
     "hero.stat.inst":"Instituciones fuente","hero.stat.cents":"Siglos cubiertos",
+    "hero.surprise":"Sorpréndeme con un mapa curado",
     "home.cats.eyebrow":"Explorar por categoría","home.cats.title":"Acceso rápido","home.cats.cta":"Abrir el archivo completo →",
     "home.coll.eyebrow":"Seleccionado","home.coll.title":"Colecciones destacadas","home.coll.cta":"Todas las colecciones →",
     "home.curated.eyebrow":"Empieza aquí","home.curated.title":"Fichas curadas",
@@ -213,9 +215,10 @@ MAPS.forEach(m => {
   (m.tags||[]).forEach(t => { COUNTS.byTag[t] = (COUNTS.byTag[t]||0) + 1; });
   if (!MAPS_BY_CATEGORY[m.category]) MAPS_BY_CATEGORY[m.category] = [];
   MAPS_BY_CATEGORY[m.category].push(m);
-  // Pre-built search index: concatenate every searchable field once, lowercased.
+  // Pre-built search index: concatenate every searchable field once, lowercased + diacritic-normalized.
   // Avoids reassembling the same string for 1,559 maps on every keystroke in filterMaps().
-  m._searchIndex = (
+  // Diacritic normalization means 'Mercator' / 'Mércator' / 'mercator' all match the same index.
+  m._searchIndex = normalizeForSearch(
     (m.title || "") + " " +
     (m.original_title || "") + " " +
     (m.region || "") + " " +
@@ -228,10 +231,16 @@ MAPS.forEach(m => {
     (m.continent || "") + " " +
     (m.language || "") + " " +
     (m.categoryDisplay || categoryDisplayRaw(m.category))
-  ).toLowerCase();
+  );
 });
 // Cheap local helper so the boot-time loop doesn't depend on categoryDisplay (declared later).
 function categoryDisplayRaw(key) { return (key||"").replace(/^\d+_/, '').replace(/_/g,' ').replace(/and/g,'&'); }
+// Lowercase + strip combining diacritics + collapse whitespace.
+// Both index and queries pass through this so search is accent-insensitive.
+function normalizeForSearch(s) {
+  if (!s) return "";
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+}
 
 /* ---------- icons ---------- */
 const icons = {
@@ -338,7 +347,7 @@ function categoryCoverImage(catKey) {
 //   #/account                  → Profile or auth (signin/signup/recover)
 //   #/account/signin / signup / recover
 //   #/timeline #/compare #/collections #/learn #/about #/library
-const PAGES = ["home","archive","map","timeline","compare","collections","learn","about","library","account"];
+const PAGES = ["home","archive","map","timeline","compare","collections","learn","article","glossary","about","library","account"];
 const ALL_CATS = "_all"; // sentinel for cross-category filtered view (era pills, tag chips)
 
 function parseHash() {
@@ -430,6 +439,8 @@ function renderRoute() {
   if (page === "learn") renderLearn();
   if (page === "library") renderLibrary();
   if (page === "about") renderAbout();
+  if (page === "article") renderArticle(param);
+  if (page === "glossary") renderGlossary();
   if (page === "account") renderAccount(param);
 }
 window.addEventListener("hashchange", renderRoute);
@@ -885,8 +896,11 @@ function filterMaps(opts = {}) {
   list = list.slice();
 
   if ((opts.search ?? archiveState.search)) {
-    const q = (opts.search ?? archiveState.search).toLowerCase();
-    list = list.filter(m => m._searchIndex.includes(q));
+    const raw = (opts.search ?? archiveState.search);
+    const tokens = normalizeForSearch(raw).split(/\s+/).filter(Boolean);
+    if (tokens.length) {
+      list = list.filter(m => tokens.every(tok => m._searchIndex.includes(tok)));
+    }
   }
   if (archiveState.era !== "all") {
     list = list.filter(m => MAP_ERA[m.id] === archiveState.era);
@@ -1874,31 +1888,171 @@ function renderCollections() {
 
 /* ============ LEARN ============ */
 const ARTICLES = [
-  { title:"Why old maps are not just inaccurate versions of modern maps", status:"Draft outline", topic:"Foundations", style:"medieval", excerpt:"Treating Ptolemy as a failed Google Maps is the surest way to misread him. Old maps were answering different questions — and often answering them well." },
-  { title:"How maps create political power", status:"Draft outline", topic:"Power", style:"imperial", excerpt:"A line on a map is rarely just descriptive. From the Treaty of Tordesillas onward, drawn boundaries have produced the very territories they claim to record." },
-  { title:"How empires used maps", status:"Draft outline", topic:"Empire", style:"colonial", excerpt:"Cadastral surveys, treaty atlases, railway concession maps. The infrastructure of empire was, in large part, made of paper." },
-  { title:"How climate maps changed science", status:"Draft outline", topic:"Science", style:"climate", excerpt:"Köppen's vegetation-derived climate classes were a quiet revolution: a way to make the atmosphere legible by treating plants as instruments." },
-  { title:"The history of topographic maps", status:"Draft outline", topic:"Method", style:"topo", excerpt:"Triangulation, plane-tabling, aerial photography, lidar. Topography is a story of measuring devices, not just of mountains." },
-  { title:"How artistic maps represent imagined worlds", status:"Draft outline", topic:"Imagination", style:"artistic", excerpt:"The compass rose, the scale bar, the frame — cartographic conventions are persuasive even when the territory is wholly invented." },
-  { title:"Reading the silences in a colonial map", status:"Draft outline", topic:"Critique", style:"colonial", excerpt:"What a map omits is often a clearer political statement than what it includes. A short guide to reading the gaps." },
-  { title:"Indigenous counter-mapping in the 21st century", status:"Draft outline", topic:"Practice", style:"indigenous", excerpt:"How communities are using GIS, GPS, and oral history to remap territories that the colonial archive has long misrepresented." },
+  { slug:"old-maps-not-inaccurate", title:"Why old maps are not just inaccurate versions of modern maps", status:"Full article", topic:"Foundations", style:"medieval", excerpt:"Treating Ptolemy as a failed Google Maps is the surest way to misread him. Old maps were answering different questions — and often answering them well." },
+  { slug:"maps-political-power", title:"How maps create political power", status:"Draft outline", topic:"Power", style:"imperial", excerpt:"A line on a map is rarely just descriptive. From the Treaty of Tordesillas onward, drawn boundaries have produced the very territories they claim to record." },
+  { slug:"empires-used-maps", title:"How empires used maps", status:"Draft outline", topic:"Empire", style:"colonial", excerpt:"Cadastral surveys, treaty atlases, railway concession maps. The infrastructure of empire was, in large part, made of paper." },
+  { slug:"climate-maps-science", title:"How climate maps changed science", status:"Draft outline", topic:"Science", style:"climate", excerpt:"Köppen's vegetation-derived climate classes were a quiet revolution: a way to make the atmosphere legible by treating plants as instruments." },
+  { slug:"topographic-history", title:"The history of topographic maps", status:"Draft outline", topic:"Method", style:"topo", excerpt:"Triangulation, plane-tabling, aerial photography, lidar. Topography is a story of measuring devices, not just of mountains." },
+  { slug:"artistic-imagined", title:"How artistic maps represent imagined worlds", status:"Draft outline", topic:"Imagination", style:"artistic", excerpt:"The compass rose, the scale bar, the frame — cartographic conventions are persuasive even when the territory is wholly invented." },
+  { slug:"silences-colonial-map", title:"Reading the silences in a colonial map", status:"Draft outline", topic:"Critique", style:"colonial", excerpt:"What a map omits is often a clearer political statement than what it includes. A short guide to reading the gaps." },
+  { slug:"indigenous-counter-mapping", title:"Indigenous counter-mapping in the 21st century", status:"Draft outline", topic:"Practice", style:"indigenous", excerpt:"How communities are using GIS, GPS, and oral history to remap territories that the colonial archive has long misrepresented." },
 ];
 
+// Full text for articles marked status:"Full article".
+const ARTICLE_BODIES = {
+"old-maps-not-inaccurate": `
+<p class="lede" style="margin-bottom:32px">There is a familiar way of looking at old maps: you point at the misshapen coastlines, the missing continents, the mythological creatures in the margins, and you remark, with some condescension, on how little the makers knew. It is a tempting reading, and it has the virtue of being easy. It is also wrong.</p>
+
+<h2>The wrong yardstick</h2>
+<p>To call a 12th-century world map "inaccurate" is to assume the cartographer was attempting modern accuracy and failing at it. But that is almost never what they were doing. The Hereford Mappa Mundi, made around 1300 and now housed in Hereford Cathedral, places Jerusalem at the centre of the world, oriented with east at the top, and populates Africa with monstrous races copied from Pliny the Elder. Read as a road atlas, it is hopeless. Read as a visual encyclopedia of medieval Christian cosmology, it is one of the most ambitious objects of its age.</p>
+
+<p>The Hereford map's makers had access to portolan charts that gave them better Mediterranean coastlines. They chose not to use them. The point of their map was not to navigate space but to argue a moral and theological order: salvation history at the centre, the known continents around it, Eden at the top, the world's monsters at the edges. This is not failed cartography. It is a different cartographic project entirely.</p>
+
+<h2>Different questions, different maps</h2>
+<p>The same logic applies to most pre-modern maps. The Tabula Peutingeriana — a 22-foot scroll showing the Roman road network — compresses north-to-south so dramatically that the Mediterranean appears as a thin channel. Modern viewers wince. But the map's purpose was to plan a journey along the cursus publicus, the imperial postal system, where the relevant question was not "what is the shape of Italy?" but "how many days from Aquileia to Antioch?". The shape was beside the point. The map was a logistics document, optimised for the question its users actually had.</p>
+
+<p>al-Idrisi's Tabula Rogeriana, made for Roger II of Sicily in 1154, places south at the top — a convention drawn from Islamic geographic tradition that disorients modern readers but corresponded to no cartographic failure on al-Idrisi's part. His Mediterranean is remarkably accurate. His Indian Ocean is open to the east, fifty years before Marco Polo travelled and three centuries before Vasco da Gama proved it. Read as a navigation chart, it is unusable. Read as a synthesis of the geographic knowledge available to a 12th-century Mediterranean polymath, it surpasses anything European cartography would produce for the next three centuries.</p>
+
+<h2>Accuracy is a constructed category</h2>
+<p>Even "modern" maps are accurate only along the dimensions they choose to optimise. The Mercator projection, designed in 1569 for marine navigation, renders compass bearings as straight lines — a brilliant solution to the sailor's problem of plotting a constant course. As a side-effect, it inflates polar latitudes dramatically. Greenland appears the size of Africa. This is not Mercator failing at world geography; it is Mercator solving the sailor's problem and accepting the trade-off. It would be like criticising a subway map for not preserving the distances between stations.</p>
+
+<p>What modern viewers call "accuracy" is usually a specific compromise: the WGS84 datum, a particular projection (often Mercator-derived), satellite-derived coordinates, decimal-degree grids. These are choices. They were made for navigation, for surveying, for state administration. They privilege some uses — geolocation, military targeting, infrastructure planning — over others. A map of indigenous territories, drawn by indigenous cartographers, might privilege oral tradition, ancestral routes, ecological zones; the result might look "inaccurate" by GIS standards while being more accurate to the question being asked.</p>
+
+<h2>How to read an old map well</h2>
+<p>If you find yourself looking at a Ptolemaic world map, or a medieval mappa mundi, or a portolan chart, here are four questions worth holding:</p>
+
+<ul style="line-height:1.7; padding-left:24px; margin-top:14px">
+  <li><strong>What question is this map trying to answer?</strong> "Where is Eden?" is a perfectly serious question for a 14th-century reader. "How many days to Antioch?" is a logistics question. "Where shall I land my ship?" is a sailor's question. Each demands a different map.</li>
+  <li><strong>What conventions does it use?</strong> South-up, east-up, T-O frames, rhumb lines, hachures, contours, isolines. Each is a decision, and each was made for a reason. Knowing the conventions of an era helps you stop reading the map as a failed modern artefact.</li>
+  <li><strong>What does it leave out?</strong> Silences in a map are rarely accidents. The interior of Africa in a 17th-century portolan is blank because Genoese sailors had no reason to plot it; the indigenous polities of North America are absent from a 1763 colonial map because including them would have undermined the legal claim the map was making.</li>
+  <li><strong>Who made it, for whom?</strong> A merchant's map, a sovereign's map, a missionary's map, a navigator's map, and a scholar's map will all be different objects. The makers and the audience are encoded in every choice the map makes.</li>
+</ul>
+
+<h2>The harder reading</h2>
+<p>None of this is to romanticise old maps. Many of them encode brutal politics — colonial dispossession, religious hierarchy, racial hierarchy, the erasure of pre-existing societies. Reading them generously does not mean accepting their claims. It means refusing the easy gesture of treating them as failed modern maps, and instead reading them as the arguments they actually are: arguments about what the world is, what matters in it, and whose questions get to count as questions.</p>
+
+<p>The most useful word here may be the simplest one: <em>map</em> comes from the Latin <em>mappa</em>, meaning a cloth or a napkin. There is nothing in the word that demands accuracy of any kind. A map is a piece of cloth on which someone has drawn some marks. Those marks make a claim. The historian's job is to read the claim.</p>
+`,
+};
+
 function renderLearn() {
-  $("#learn-root").innerHTML = ARTICLES.map((a, i) => `
-    <article class="article-card">
+  $("#learn-root").innerHTML = ARTICLES.map((a, i) => {
+    const isFull = ARTICLE_BODIES[a.slug];
+    const cardOpen = isFull ? `<a class="article-card article-card-link" href="#/article/${a.slug}">` : `<div class="article-card">`;
+    const cardClose = isFull ? `</a>` : `</div>`;
+    return `
+    ${cardOpen}
       <div class="map-frame" style="aspect-ratio: 4/3">${window.mapSVG(a.style, a.title.length + i)}</div>
       <div class="article-body">
         <div class="meta-row">
           <span class="meta">${a.topic}</span><span class="dot"></span>
-          <span class="meta">${a.status}</span>
+          <span class="meta" style="color:${isFull ? 'var(--gold)' : 'var(--ink-faint)'}">${a.status}</span>
         </div>
         <h3 style="margin-top:12px">${a.title}</h3>
         <p style="margin-top:14px; color:var(--ink-dim)">${a.excerpt}</p>
-        <span class="meta" style="margin-top:18px; display:inline-block; color:var(--ink-faint); font-style:italic">Full article forthcoming</span>
+        <span class="meta" style="margin-top:18px; display:inline-block; color:${isFull ? 'var(--gold)' : 'var(--ink-faint)'}; font-style:italic">${isFull ? 'Read article →' : 'Full article forthcoming'}</span>
       </div>
-    </article>
-  `).join("");
+    ${cardClose}`;
+  }).join("");
+}
+
+/* ============ ARTICLE (single Learn article reader) ============ */
+function renderArticle(slug) {
+  const root = $("#article-content");
+  if (!root) return;
+  const article = ARTICLES.find(a => a.slug === slug);
+  const body = ARTICLE_BODIES[slug];
+  if (!article || !body) {
+    root.innerHTML = `
+      <div class="container" style="padding: 96px 0; max-width:720px; text-align:center">
+        <span class="eyebrow" style="color:var(--terracotta)">404 · Article not found</span>
+        <h1 style="margin-top:18px">No article matches <code style="font-family:var(--mono); font-size:0.6em; color:var(--ink-muted)">${escapeAttr(slug || '(empty)')}</code>.</h1>
+        <p class="lede" style="margin-top:24px">It may be a draft outline still — only some articles have full bodies.</p>
+        <a class="btn btn-primary" href="#/learn" style="margin-top:28px">Back to all articles</a>
+      </div>`;
+    return;
+  }
+  root.innerHTML = `
+    <div class="container article-reader">
+      <a href="#/learn" class="meta" style="display:inline-block; margin-top:48px; color:var(--ink-muted)">← All articles</a>
+      <header class="article-reader-header">
+        <span class="eyebrow">${article.topic}</span>
+        <h1 style="margin-top:14px">${article.title}</h1>
+      </header>
+      <div class="article-reader-body">
+        ${body}
+      </div>
+      <div class="divider-ornate" style="margin: 64px 0 32px"><span class="glyph">✦ ✦ ✦</span></div>
+      <div style="text-align:center">
+        <a class="btn btn-ghost" href="#/learn">← Back to all articles</a>
+      </div>
+    </div>
+  `;
+}
+
+/* ============ GLOSSARY ============ */
+const GLOSSARY = [
+  { term:"Mappa mundi", def:"Latin for 'map of the world'. By convention refers to medieval European world maps that placed Jerusalem at the centre and combined geography with theology, classical legend, and cosmology. Often east-up.", examples:["seed_003","seed_004","seed_026"] },
+  { term:"T-O map", def:"A medieval schematic of the world as a circle (the O) divided by a T-shape into three continents: Asia at the top, Europe lower-left, Africa lower-right. The T is formed by the Don, the Mediterranean, and the Nile. Sometimes Christ or the Trinity occupy the centre.", examples:["seed_003","seed_026"] },
+  { term:"Portolan chart", def:"A nautical chart of the 13th–17th centuries, drawn on vellum, characterised by rhumb-line networks radiating from compass-rose nodes. Coastlines are observationally precise; interiors are decorative or empty. Used by Italian and Catalan navigators.", examples:["seed_012","seed_024"] },
+  { term:"Rhumb line", def:"A line of constant compass bearing. On a Mercator projection it is a straight line — which is the whole point of that projection. On a globe it spirals toward the poles.", examples:["seed_007"] },
+  { term:"Mercator projection", def:"A cylindrical map projection devised by Gerardus Mercator in 1569 in which rhumb lines are straight. Excellent for navigation; severely distorts polar areas. Still the default projection of most digital map services.", examples:["seed_007","seed_032"] },
+  { term:"Cordiform projection", def:"A heart-shaped projection used in the 16th century, notably by Mercator. Distorts in different ways than cylindrical projections; was favoured for symbolic and artistic reasons as much as mathematical ones.", examples:["seed_001"] },
+  { term:"Hachure", def:"Short parallel pen-strokes used on 18th–19th-century topographic maps to indicate slope direction and steepness. Replaced over the 20th century by contour lines.", examples:[] },
+  { term:"Isoline / isarithm", def:"A line on a map connecting points of equal value. Specific cases include isotherms (equal temperature), isobars (equal pressure), isohyets (equal precipitation), and contour lines (equal elevation).", examples:["seed_022","seed_050"] },
+  { term:"Contour line", def:"An isoline of constant elevation. The defining convention of modern topographic mapping. Slope is encoded by line spacing: closer lines mean steeper terrain.", examples:[] },
+  { term:"Cadastre / cadastral map", def:"A map of land parcels for property and taxation purposes. Cadastral mapping was a central administrative tool of European colonial states; it produced both the data and the legal fiction of clean, individuated ownership.", examples:["seed_033"] },
+  { term:"T-in-O / Macrobian map", def:"A T-O variant from late antique authors (Macrobius, 5th c.) showing zonal climate bands — torrid, temperate, frigid — across both hemispheres. Influential in medieval Europe.", examples:[] },
+  { term:"Itinerary map", def:"A map organised around a route rather than a region. The Tabula Peutingeriana is the classic case: distances along Roman roads are accurate, but the underlying geography is distorted to fit.", examples:["seed_010"] },
+  { term:"Bird's-eye view / axonometric plan", def:"A representation of a city as if seen from an oblique angle above. Common in early-modern European city plans (16th–18th c.). Each building is drawn from the same angle, so the plan reads as a model.", examples:["seed_019"] },
+  { term:"Köppen-Geiger classification", def:"A climate classification developed by Wladimir Köppen (1900, revised 1936) using monthly temperature and precipitation thresholds, organised around what vegetation grows where. Still the most widely used climate classification.", examples:["seed_022","seed_050"] },
+  { term:"Treaty of Tordesillas line", def:"The 1494 meridian dividing Spanish and Portuguese claims in the New World. It first appears as a cartographic object on the Cantino Planisphere (1502). One of the earliest examples of a line on a map producing a political reality.", examples:["seed_006"] },
+  { term:"Convivencia", def:"The historiographic term for the period of relative coexistence and intellectual exchange between Christians, Muslims, and Jews on the Iberian peninsula and in Norman Sicily (c. 700–1500). The Tabula Rogeriana is its outstanding cartographic product.", examples:["seed_002"] },
+  { term:"Cosmogram", def:"A representation of the cosmos as a structured whole, often combining geography with cosmological or theological order. Medieval mappae mundi are cosmograms; so is the Codex Mendoza frontispiece, which presents Tenochtitlan as the centre of a four-quarter world.", examples:["seed_003","seed_015"] },
+  { term:"South-up orientation", def:"A map oriented with south at the top. Standard in much of Islamic medieval cartography (e.g. al-Idrisi). Modern viewers find it disorienting, but there is no geographic reason maps should be north-up — the convention is a 15th–16th-century European choice that became universal.", examples:["seed_002"] },
+  { term:"Globe gores", def:"The almond-shaped strips into which a globe's surface is divided when printed on a flat sheet and later pasted onto a sphere. A standard production method from the 16th century onward.", examples:[] },
+  { term:"Toponym", def:"A place name. The history of cartography is in significant part a history of which toponyms get written in larger type, which get standardised, and which get displaced — as colonial maps repeatedly demonstrate.", examples:[] },
+  { term:"Datum (geodetic)", def:"A reference system used to specify coordinates on Earth's surface. WGS84 is the most common today; older maps use a wide variety of regional and national datums. Coordinates without a stated datum are at best ambiguous.", examples:[] },
+  { term:"Triangulation", def:"A surveying method that determines positions by measuring the angles of triangles whose vertices are at known points. The basis of modern national topographic surveys from the 18th century onward.", examples:["seed_021"] },
+  { term:"Pluriversal mapping", def:"A category that refuses the assumption that there is one neutral 'world' to be mapped. Indigenous cartographies, counter-mapping projects, and many post-colonial cartographies are pluriversal in this sense — they insist that the world is many worlds, mapped from many positions.", examples:["seed_038"] },
+  { term:"Counter-mapping", def:"Mapping by communities who refuse the cartographic conventions imposed on them by states. Includes indigenous land mapping, queer cartographies, and activist cartographies that document marginalised geographies.", examples:[] },
+  { term:"Compass rose", def:"A figure on a map showing the orientation of the cardinal directions. Originally functional for portolan charts; later a decorative convention that signals 'this is a map' even when the object is fictional.", examples:["seed_012"] },
+  { term:"Scale bar", def:"A graphical scale on a map, used to measure distances. Modern maps usually include one. Many medieval and early-modern maps did not, because their organising logic was not metric.", examples:[] },
+  { term:"Aspect (cartographic)", def:"The shape of the parameter set that a projection optimises. The Mercator preserves angles (it is conformal); the Lambert equal-area preserves area; the Robinson is a compromise. No projection preserves both shape and area.", examples:[] },
+  { term:"Geocoding", def:"The process of assigning coordinates to place names or addresses. A 20th–21st-century process; pre-modern maps generally did the inverse, attaching place names to coordinates determined astronomically.", examples:[] },
+  { term:"Ground truth", def:"Direct observation in the field, used to verify or correct what appears on a map. Aerial photography and satellite imagery are constantly checked against ground truth — and frequently disagree with it.", examples:[] },
+  { term:"Lidar", def:"Light Detection and Ranging: a sensing technique that uses laser pulses to measure elevations at high resolution. Now standard for topographic surveys, archaeology, and forestry. Has revealed previously unknown features under forest canopy.", examples:[] },
+];
+
+function renderGlossary() {
+  const root = $("#glossary-content");
+  if (!root) return;
+  const entries = [...GLOSSARY].sort((a,b) => a.term.localeCompare(b.term));
+  root.innerHTML = `
+    <div class="container">
+      <div style="padding: 72px 0 24px; max-width: 880px;">
+        <span class="eyebrow">Reference</span>
+        <h1 style="margin-top:18px">Glossary of cartographic terms.</h1>
+        <p class="lede" style="margin-top:18px">Thirty definitions for terms that recur across the archive. Each entry links to maps that exemplify the concept.</p>
+      </div>
+      <div class="glossary-grid">
+        ${entries.map(g => `
+          <article class="glossary-entry" id="g-${escapeAttr(g.term.toLowerCase().replace(/[^a-z]+/g,'-'))}">
+            <h3 class="glossary-term">${g.term}</h3>
+            <p class="glossary-def">${g.def}</p>
+            ${g.examples.length ? `
+              <div class="glossary-examples">
+                <span class="meta">See:</span>
+                ${g.examples.map(id => {
+                  const mp = MAPS.find(x => x.id === id);
+                  return mp ? `<a class="link-underline" style="color:var(--gold); margin-left:8px" href="#/map/${mp.id}">${shortTitle(mp.title, 50)}</a>` : '';
+                }).join("")}
+              </div>` : ''}
+          </article>
+        `).join("")}
+      </div>
+    </div>
+  `;
 }
 
 /* ============ ABOUT — archive-at-a-glance stats panel ============ */
@@ -2568,6 +2722,13 @@ function bindSearch() {
       }
     });
   });
+  // Random curated map button
+  $("#random-map-btn")?.addEventListener("click", () => {
+    const curated = MAPS.filter(m => m.significance);
+    if (!curated.length) return;
+    const pick = curated[Math.floor(Math.random() * curated.length)];
+    navigate("map/" + pick.id);
+  });
 
   // Global search button → opens search modal
   $("#global-search-btn")?.addEventListener("click", openSearchModal);
@@ -2582,9 +2743,10 @@ function openSearchModal() {
 }
 function closeSearchModal() { $("#search-modal").classList.remove("open"); }
 function runSearchModal(q) {
+  const nq = normalizeForSearch(q || "");
   const results = q ? filterMaps({ search: q }).slice(0, 12) : [];
-  const eraMatches = q ? ERAS.filter(e => e.label.toLowerCase().includes(q.toLowerCase())).slice(0,3) : [];
-  const catMatches = q ? CATEGORY_META.filter(c => c.display.toLowerCase().includes(q.toLowerCase()) || c.subtitle.toLowerCase().includes(q.toLowerCase())).slice(0,3) : [];
+  const eraMatches = q ? ERAS.filter(e => normalizeForSearch(e.label).includes(nq)).slice(0,3) : [];
+  const catMatches = q ? CATEGORY_META.filter(c => normalizeForSearch(c.display).includes(nq) || normalizeForSearch(c.subtitle).includes(nq)).slice(0,3) : [];
   const totalCount = q ? filterMaps({ search: q }).length : 0;
   $("#search-modal-results").innerHTML = q ? `
     ${catMatches.length ? `<div class="sm-section">
