@@ -965,6 +965,7 @@ function renderMapDetail(id) {
           </div>
           ${attribution}
           ${m.source_url ? `<a class="btn btn-ghost" href="${m.source_url}" target="_blank" rel="noopener" style="margin-top:20px; padding-left:0">${icons.ext} View record at source institution</a>` : ''}
+          ${renderCitations(m)}
         </aside>
       </div>
 
@@ -1037,9 +1038,91 @@ function renderMapDetail(id) {
   }));
 }
 
+/* ============ Citations (Chicago / APA / MLA) ============ */
+function citationAuthor(m) {
+  if (m._authorIsContributor || !m.author) return "[author unknown]";
+  // Try to normalize "Firstname Lastname" → "Lastname, Firstname" for Chicago/MLA.
+  // If already comma-separated or includes parenthetical dates, return as-is.
+  const a = m.author.split(/[,;]/)[0].trim();
+  if (a.includes(",") || a.includes("(")) return a;
+  const parts = a.split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return a;
+  const last = parts.pop();
+  return `${last}, ${parts.join(" ")}`;
+}
+function citationYear(m) {
+  if (m.depictedYear && m._yearIsModernCreation) return `${m.year} [depicting ${m.depictedYear}]`;
+  return m.year || "n.d.";
+}
+function citationTitle(m) { return m.title || "[Untitled map]"; }
+function citationSource(m) {
+  const inst = m.institution || "Source institution unknown";
+  return inst;
+}
+function citationURL(m) { return m.source_url || ''; }
+
+function chicagoCitation(m) {
+  // Author. "Title." Year. Source. URL.
+  return `${citationAuthor(m)}. <em>${citationTitle(m)}</em>. ${citationYear(m)}. ${citationSource(m)}. ${citationURL(m) ? `<a class="link-underline" href="${citationURL(m)}" target="_blank" rel="noopener" style="word-break:break-all">${citationURL(m)}</a>.` : ''}`;
+}
+function apaCitation(m) {
+  // Author. (Year). Title [Map]. Source. URL
+  return `${citationAuthor(m)} (${citationYear(m)}). <em>${citationTitle(m)}</em> [Map]. ${citationSource(m)}. ${citationURL(m) ? `<a class="link-underline" href="${citationURL(m)}" target="_blank" rel="noopener" style="word-break:break-all">${citationURL(m)}</a>` : ''}`;
+}
+function mlaCitation(m) {
+  // Author. Title. Year, Source, URL.
+  return `${citationAuthor(m)}. <em>${citationTitle(m)}</em>. ${citationYear(m)}, ${citationSource(m)}${citationURL(m) ? `, <a class="link-underline" href="${citationURL(m)}" target="_blank" rel="noopener" style="word-break:break-all">${citationURL(m)}</a>` : ''}.`;
+}
+
+function renderCitations(m) {
+  if (!m.id) return '';
+  return `
+    <details class="citations">
+      <summary><span class="eyebrow">Cite this record</span> <span class="cite-hint">Chicago · APA · MLA</span></summary>
+      <div class="citation-block">
+        <div class="citation-row">
+          <span class="meta cite-style">Chicago</span>
+          <div class="cite-text" data-cite="chicago">${chicagoCitation(m)}</div>
+          <button class="cite-copy" data-copy-cite="chicago" title="Copy Chicago citation">copy</button>
+        </div>
+        <div class="citation-row">
+          <span class="meta cite-style">APA</span>
+          <div class="cite-text" data-cite="apa">${apaCitation(m)}</div>
+          <button class="cite-copy" data-copy-cite="apa" title="Copy APA citation">copy</button>
+        </div>
+        <div class="citation-row">
+          <span class="meta cite-style">MLA</span>
+          <div class="cite-text" data-cite="mla">${mlaCitation(m)}</div>
+          <button class="cite-copy" data-copy-cite="mla" title="Copy MLA citation">copy</button>
+        </div>
+        <p class="cite-note">Citations are generated automatically from record metadata. For academic work, verify against the source institution's own record (the "View record at source" link above).</p>
+      </div>
+    </details>
+  `;
+}
+
 function bindViewer(m) {
   const stage = $("#viewer-stage");
   const canvas = $("#viewer-canvas");
+  // Wire citation copy buttons (works even when stage isn't present)
+  $$('[data-copy-cite]').forEach(btn => btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const key = btn.dataset.copyCite;
+    const el = document.querySelector(`[data-cite="${key}"]`);
+    if (!el) return;
+    // Strip HTML for clipboard
+    const text = el.textContent.trim();
+    try {
+      await navigator.clipboard.writeText(text);
+      const orig = btn.textContent;
+      btn.textContent = "✓ copied";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 1400);
+    } catch (err) {
+      btn.textContent = "× failed";
+      setTimeout(() => { btn.textContent = "copy"; }, 1400);
+    }
+  }));
   if (!stage) return;
   let z = 1, tx = 0, ty = 0, dragging = false, sx = 0, sy = 0;
   function apply() { stage.style.transform = `translate(${tx}px, ${ty}px) scale(${z})`; }
@@ -2277,13 +2360,31 @@ function bindSearchModal() {
 
 /* ============ init ============ */
 function bindNav() {
+  const navLinks = $("#nav-links");
+  const menuBtn = $("#nav-menu-btn");
   $$(".nav-link").forEach(l => l.addEventListener("click", () => {
     if (l.dataset.page === "archive") {
       archiveState.currentCategory = null;
       archiveState.search = "";
     }
     navigate(l.dataset.page);
+    // Close mobile menu after navigating
+    navLinks?.classList.remove("open");
+    menuBtn?.setAttribute("aria-expanded", "false");
   }));
+  // Mobile menu toggle
+  menuBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = navLinks.classList.toggle("open");
+    menuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  });
+  // Close on outside click
+  document.addEventListener("click", (e) => {
+    if (!navLinks?.classList.contains("open")) return;
+    if (e.target.closest("#nav-links") || e.target.closest("#nav-menu-btn")) return;
+    navLinks.classList.remove("open");
+    menuBtn?.setAttribute("aria-expanded", "false");
+  });
 }
 function init() {
   if (!window.MAPS_RAW || !window.MAPS_RAW.length) {

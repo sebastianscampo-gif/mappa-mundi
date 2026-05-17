@@ -393,9 +393,36 @@ a { color: inherit; text-decoration: none; }
 .spread { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
 
 .hide-mobile { }
+.nav-menu-btn { display: none; }
 @media (max-width: 760px) {
   .hide-mobile { display: none !important; }
-  .nav-links { display: none; }
+  .nav-menu-btn { display: grid; }
+  .nav-links {
+    position: fixed;
+    top: 65px; left: 0; right: 0;
+    background: var(--bg-deep);
+    border-bottom: 1px solid var(--divider);
+    flex-direction: column;
+    gap: 0;
+    padding: 12px 20px 20px;
+    align-items: stretch;
+    justify-content: flex-start;
+    z-index: 49;
+    transform: translateY(-110%);
+    transition: transform .25s ease;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  }
+  .nav-links.open { transform: translateY(0); }
+  .nav-link {
+    padding: 14px 12px;
+    font-size: 16px;
+    border-bottom: 1px solid var(--divider-soft);
+    border-radius: 0;
+    text-align: left;
+  }
+  .nav-link:last-child { border-bottom: 0; }
+  .nav-link.active::after { display: none; }
+  .nav-link.active { color: var(--gold); background: rgba(180,140,60,0.06); }
 }
 
 /* tiny inline svg icons */

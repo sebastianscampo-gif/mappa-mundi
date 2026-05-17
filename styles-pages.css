@@ -1219,6 +1219,85 @@ a.stats-list-name:hover { color: var(--gold); }
 }
 .stats-list-compact li { padding: 7px 12px; font-size: 13px; }
 
+/* ============ Citations block on map detail page ============ */
+.citations {
+  margin-top: 24px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+}
+.citations summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.citations summary::-webkit-details-marker { display: none; }
+.citations summary::before {
+  content: "+";
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--gold);
+  margin-right: 8px;
+  display: inline-block;
+  transition: transform .2s;
+}
+.citations[open] summary::before { content: "−"; }
+.cite-hint {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.08em;
+}
+.citation-block {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.citation-row {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 0;
+  border-top: 1px solid var(--divider-soft);
+}
+.citation-row:first-child { border-top: 0; padding-top: 4px; }
+.cite-style { padding-top: 4px; }
+.cite-text {
+  font-family: var(--serif-body);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-dim);
+}
+.cite-text em { font-style: italic; color: var(--ink); }
+.cite-copy {
+  background: transparent;
+  border: 1px solid var(--divider);
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.cite-copy:hover { color: var(--gold); border-color: var(--gold-deep); }
+.cite-copy.copied { color: var(--gold); border-color: var(--gold); background: rgba(180,140,60,0.06); }
+.cite-note {
+  font-family: var(--serif-body);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink-muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
 /* ============ Curated ficha badge ============ */
 .curated-badge {
   position: absolute;
