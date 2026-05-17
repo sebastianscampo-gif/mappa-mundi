@@ -238,13 +238,67 @@ const PAGES = ["home","archive","map","timeline","compare","collections","learn"
 const ALL_CATS = "_all"; // sentinel for cross-category filtered view (era pills, tag chips)
 
 function parseHash() {
-  const h = location.hash.replace(/^#\/?/, "");
+  // Format: #/page/param?key=val&key=val
+  let h = location.hash.replace(/^#\/?/, "");
+  let query = "";
+  const qIdx = h.indexOf("?");
+  if (qIdx >= 0) {
+    query = h.slice(qIdx + 1);
+    h = h.slice(0, qIdx);
+  }
   const [page, ...rest] = h.split("/");
-  return { page: PAGES.includes(page) ? page : "home", param: rest.join("/") };
+  const params = {};
+  if (query) {
+    for (const part of query.split("&")) {
+      const [k, v = ""] = part.split("=");
+      if (k) params[decodeURIComponent(k)] = decodeURIComponent(v);
+    }
+  }
+  return { page: PAGES.includes(page) ? page : "home", param: rest.join("/"), query: params };
 }
 function navigate(path) { location.hash = "#/" + path; }
-function renderRoute() {
+
+// Serialise archiveState filters into the URL hash without triggering a re-render.
+// Allows the user to copy/share a URL that restores their filter combination.
+function serializeArchiveFilters() {
+  const q = {};
+  if (archiveState.search) q.q = archiveState.search;
+  if (archiveState.era && archiveState.era !== "all") q.era = archiveState.era;
+  if (archiveState.continent && archiveState.continent !== "All") q.continent = archiveState.continent;
+  if (archiveState.language && archiveState.language !== "All") q.lang = archiveState.language;
+  if (archiveState.tags.size) q.tags = [...archiveState.tags].join("|");
+  if (archiveState.fichaQuality === "full") q.curated = "1";
+  if (archiveState.yearFrom != null) q.from = archiveState.yearFrom;
+  if (archiveState.yearTo != null) q.to = archiveState.yearTo;
+  if (archiveState.sort && archiveState.sort !== "Oldest dated first") q.sort = archiveState.sort;
+  const qs = Object.entries(q).map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
+  return qs;
+}
+function applyFiltersToUrl() {
   const { page, param } = parseHash();
+  if (page !== "archive") return;
+  const qs = serializeArchiveFilters();
+  const basePath = `#/${page}${param ? "/" + param : ""}`;
+  const newHash = qs ? `${basePath}?${qs}` : basePath;
+  if (location.hash !== newHash) {
+    // Replace state so we don't pollute history with every keystroke
+    history.replaceState(null, "", newHash);
+  }
+}
+function restoreFiltersFromUrl(query) {
+  if (!query) return;
+  if (query.q != null) archiveState.search = query.q;
+  if (query.era) archiveState.era = query.era;
+  if (query.continent) archiveState.continent = query.continent;
+  if (query.lang) archiveState.language = query.lang;
+  if (query.tags) archiveState.tags = new Set(query.tags.split("|").filter(Boolean));
+  if (query.curated === "1") archiveState.fichaQuality = "full";
+  if (query.from) { const n = parseInt(query.from, 10); if (!isNaN(n)) archiveState.yearFrom = n; }
+  if (query.to)   { const n = parseInt(query.to, 10);   if (!isNaN(n)) archiveState.yearTo = n; }
+  if (query.sort) archiveState.sort = query.sort;
+}
+function renderRoute() {
+  const { page, param, query } = parseHash();
   $$(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + page));
   $$(".nav-link").forEach(l => l.classList.toggle("active", l.dataset.page === page));
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -252,13 +306,17 @@ function renderRoute() {
   if (page !== "map") { _viewerCleanup?.(); _viewerCleanup = null; }
   if (page === "map") renderMapDetail(param || (MAPS[0] && MAPS[0].id));
   if (page === "archive") {
-    // param could be a category key OR start with _/ for special routes
-    if (param && CATEGORY_META.some(c => c.key === param)) {
+    // Special sentinels and category keys come in via param
+    if (param === ALL_CATS) {
+      archiveState.currentCategory = ALL_CATS;
+    } else if (param && CATEGORY_META.some(c => c.key === param)) {
       archiveState.currentCategory = param;
-      archiveState.search = "";
+      if (!Object.keys(query).length) archiveState.search = "";
     } else {
       archiveState.currentCategory = null;
     }
+    // Restore any filter state encoded in the URL query
+    restoreFiltersFromUrl(query);
     renderArchive();
   }
   if (page === "compare") renderCompare();
@@ -396,6 +454,8 @@ function renderArchive() {
   } else {
     renderCategoryGrid(root);
   }
+  // Reflect filter state in the URL so it's shareable / bookmarkable
+  applyFiltersToUrl();
 }
 
 /* ----- Categories landing (16 cards) ----- */
@@ -675,6 +735,7 @@ function renderResultGrid(list, scope) {
     ${chips.length ? `<div class="active-chips">
       ${chips.map(c => `<button class="active-chip" data-clear="${c.k}">${c.label} ${icons.close}</button>`).join("")}
       ${chips.length > 1 ? `<button class="active-chip clear-all" data-clear="*">Clear all</button>` : ''}
+      <button class="active-chip share-link" id="share-filter-link" title="Copy a link that restores this filter combination">🔗 Copy share link</button>
     </div>` : ''}
     <div class="archive-toolbar">
       <span class="meta"><strong style="color:var(--gold); font-weight:500">${fmt(total)}</strong> map${total===1?"":"s"} ${scope ? `in ${scope}` : ''}</span>
@@ -859,6 +920,21 @@ function wireResultControls() {
   });
   // Clear all
   $("#clear-all-filters")?.addEventListener("click", clearAllFilters);
+  // Share-link button
+  $("#share-filter-link")?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    const url = location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      const orig = btn.innerHTML;
+      btn.innerHTML = "✓ link copied";
+      setTimeout(() => { btn.innerHTML = orig; }, 1600);
+    } catch {
+      btn.innerHTML = "× failed to copy";
+      setTimeout(() => { btn.innerHTML = "🔗 Copy share link"; }, 1600);
+    }
+  });
 }
 function clearAllFilters() {
   archiveState.search = "";
@@ -1237,7 +1313,12 @@ const TIMELINE_PERIODS = [
 function renderTimeline() {
   $("#timeline-root").innerHTML = TIMELINE_PERIODS.map((p, i) => {
     const inEra = MAPS.filter(m => MAP_ERA[m.id] === p.eraKey && m.renderable);
-    const sample = inEra.slice(0, 3);
+    const curatedInEra = inEra.filter(m => m.significance);
+    // Prefer curated fichas in the sample; fill remainder with other renderable maps from the era
+    const sample = [
+      ...curatedInEra.slice(0, 4),
+      ...inEra.filter(m => !m.significance).slice(0, Math.max(0, 4 - curatedInEra.length))
+    ].slice(0, 4);
     return `
       <article class="period">
         <div class="period-marker">
@@ -1245,12 +1326,15 @@ function renderTimeline() {
           <div class="period-line"></div>
         </div>
         <div class="period-content">
-          <span class="meta">${p.range} · ${fmt(inEra.length)} maps in archive</span>
+          <span class="meta">${p.range} · ${fmt(inEra.length)} maps in archive${curatedInEra.length ? ` · ${fmt(curatedInEra.length)} with curated essay` : ''}</span>
           <h2 style="margin-top:8px">${p.name}</h2>
           <p class="lede" style="margin-top:18px; max-width:62ch">${p.blurb}</p>
           ${sample.length ? `
             <div class="grid-cards" style="margin-top:36px">${sample.map(mapCard).join("")}</div>
-            ${inEra.length > 3 ? `<a class="btn btn-ghost" href="#/archive" data-era-link="${p.eraKey}" style="margin-top:24px; padding-left:0">Browse all ${fmt(inEra.length)} maps from this era ${icons.arrow}</a>` : ''}
+            <div class="row" style="margin-top:24px; gap:6px; flex-wrap:wrap">
+              ${inEra.length > 4 ? `<a class="btn btn-ghost" href="#/archive" data-era-link="${p.eraKey}" style="padding-left:0">Browse all ${fmt(inEra.length)} maps from this era ${icons.arrow}</a>` : ''}
+              ${curatedInEra.length > 4 ? `<a class="btn btn-ghost" href="#/archive" data-era-link="${p.eraKey}" data-era-curated="1">See the ${fmt(curatedInEra.length)} curated essays only ${icons.arrow}</a>` : ''}
+            </div>
           ` : `<p style="margin-top:24px; color:var(--ink-muted); font-style:italic">No maps in this period are catalogued yet.</p>`}
         </div>
       </article>
@@ -1260,6 +1344,7 @@ function renderTimeline() {
     e.preventDefault();
     archiveState.era = a.dataset.eraLink;
     archiveState.currentCategory = ALL_CATS;
+    if (a.dataset.eraCurated) archiveState.fichaQuality = "full";
     navigate("archive");
   }));
 }
@@ -1281,6 +1366,14 @@ function compareDefaults() {
   if (!compareState.right) compareState.right = rich[Math.floor(rich.length/2)]?.id || rich[1]?.id;
 }
 
+const COMPARE_PRESETS = [
+  { name:"Islamic vs European world map", left:"seed_002", right:"seed_007", note:"al-Idrisi's Tabula Rogeriana (1154) vs Mercator (1569) — south-up Islamic geography against the projection that would define the modern atlas." },
+  { name:"Medieval cosmology vs Renaissance science", left:"seed_003", right:"seed_008", note:"Hereford Mappa Mundi (~1300) vs Ortelius's Theatrum (1570) — theology compared with the first modern systematic atlas." },
+  { name:"First America vs Earth from space", left:"seed_001", right:"seed_023", note:"Waldseemüller (1507), the map that named America, vs the NASA Blue Marble (2002)." },
+  { name:"Two ages of empire", left:"seed_036", right:"seed_032", note:"Roman Empire at 117 CE vs the British Empire in 1886 — what 1,800 years of imperial cartography looks like." },
+  { name:"Borders before and after Berlin", left:"seed_034", right:"seed_033", note:"Ottoman Empire at its 1683 peak vs the Berlin Conference partition of Africa (1885) — two cartographies of imperial reach." },
+];
+
 function renderCompare() {
   compareDefaults();
   const left = MAPS.find(m => m.id === compareState.left) || MAPS[0];
@@ -1295,6 +1388,17 @@ function renderCompare() {
           <p class="lede" style="max-width:62ch; margin-top:18px">
             How the same place was drawn in different centuries — and what the differences reveal about who was drawing, and for whom.
           </p>
+        </div>
+      </div>
+
+      <div class="compare-presets">
+        <span class="eyebrow">Suggested pairings</span>
+        <div class="compare-preset-list">
+          ${COMPARE_PRESETS.map((p, i) => `
+            <button class="compare-preset-card" data-preset="${i}" title="${escapeAttr(p.note)}">
+              <span class="preset-name">${p.name}</span>
+              <span class="preset-arrow">→</span>
+            </button>`).join("")}
         </div>
       </div>
 
@@ -1471,6 +1575,14 @@ function bindCompareControls() {
   // Mode tabs
   document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener("click", () => {
     compareState.mode = b.dataset.mode;
+    renderCompare();
+  }));
+  // Preset pairings
+  document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener("click", () => {
+    const p = COMPARE_PRESETS[+b.dataset.preset];
+    if (!p) return;
+    compareState.left = p.left;
+    compareState.right = p.right;
     renderCompare();
   }));
 
