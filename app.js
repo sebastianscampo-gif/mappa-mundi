@@ -347,6 +347,21 @@ function renderHome() {
     curated.push(curatedPool[(day * 11 + i * 37) % curatedPool.length]);
   }
   $("#home-curated").innerHTML = curated.map(mapCard).join("");
+
+  // "See all 40 curated" sets the ficha filter + jumps to a cross-category view
+  $("#home-browse-curated")?.addEventListener("click", () => {
+    archiveState.fichaQuality = "full";
+    archiveState.currentCategory = ALL_CATS;
+    archiveState.search = "";
+    archiveState.era = "all";
+    archiveState.continent = "All";
+    archiveState.language = "All";
+    archiveState.tags = new Set();
+    archiveState.yearFrom = null;
+    archiveState.yearTo = null;
+    archiveState.page = 1;
+    navigate("archive");
+  });
 }
 
 /* ============ ARCHIVE / CATEGORIES ============ */
@@ -665,7 +680,14 @@ function renderResultGrid(list, scope) {
       <span class="meta"><strong style="color:var(--gold); font-weight:500">${fmt(total)}</strong> map${total===1?"":"s"} ${scope ? `in ${scope}` : ''}</span>
     </div>
     <div class="grid-cards">
-      ${view.length ? view.map(mapCard).join("") : `<div class="empty-state">No maps match these filters. Try clearing some constraints, or <a class="link-underline" href="#/archive" style="color:var(--gold)">return to all categories</a>.</div>`}
+      ${view.length ? view.map(mapCard).join("") : `<div class="empty-state">
+        <p style="font-style:italic">No maps match this combination of filters.</p>
+        ${chips.length ? `<p style="margin-top:14px; font-style:normal; font-family:var(--serif-body)">Try removing one of:</p>
+        <div class="active-chips" style="margin-top:10px; justify-content:center">
+          ${chips.map(c => `<button class="active-chip" data-clear="${c.k}">${c.label} ${icons.close}</button>`).join("")}
+        </div>` : ''}
+        <p style="margin-top:18px; font-style:normal"><a class="link-underline" href="#/archive" style="color:var(--gold)">Or return to all 16 categories</a></p>
+      </div>`}
     </div>
     ${view.length < total ? `<div class="archive-loadmore-wrap">
       <span class="meta">Showing ${fmt(view.length)} of ${fmt(total)}</span>
