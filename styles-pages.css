@@ -1219,6 +1219,80 @@ a.stats-list-name:hover { color: var(--gold); }
 }
 .stats-list-compact li { padding: 7px 12px; font-size: 13px; }
 
+/* ============ Atlas (meta-map) ============ */
+.atlas-controls {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 16px 18px;
+  margin: 28px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+}
+.atlas-count { margin-left: auto; color: var(--gold); font-family: var(--mono); }
+
+.atlas-stage {
+  position: relative;
+  background: oklch(12% 0.01 240);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.atlas-svg { display: block; width: 100%; height: auto; }
+
+.atlas-svg .pin {
+  fill: var(--blue);
+  stroke: oklch(85% 0.06 240);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: fill .15s, stroke-width .15s;
+}
+.atlas-svg .pin-curated {
+  fill: var(--gold);
+  stroke: oklch(92% 0.04 78);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: fill .15s, stroke-width .15s;
+}
+.atlas-svg .pin-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.atlas-pin-group:hover .pin,
+.atlas-pin-group:hover .pin-curated { stroke-width: 2.5; }
+.atlas-svg .pin-count {
+  fill: oklch(15% 0.01 60);
+  font-family: var(--mono);
+  font-size: 8px;
+  text-anchor: middle;
+  font-weight: bold;
+  pointer-events: none;
+}
+.atlas-tooltip {
+  position: fixed;
+  background: var(--bg-elev);
+  border: 1px solid var(--gold-deep);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-family: var(--serif-body);
+  font-size: 13px;
+  color: var(--ink);
+  pointer-events: none;
+  z-index: 100;
+  max-width: 280px;
+  box-shadow: var(--shadow);
+}
+.atlas-tooltip-title { font-weight: 500; line-height: 1.3; margin-bottom: 6px; }
+.atlas-tooltip-title .curated-mark { color: var(--gold); }
+.atlas-tooltip-meta {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+  color: var(--ink-muted); text-transform: uppercase;
+}
+.atlas-tooltip-other {
+  margin-top: 6px;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--gold);
+}
+
 /* ============ Article reader ============ */
 .article-card-link { display: flex; flex-direction: column; }
 .article-card-link:hover { border-color: var(--gold-deep); transform: translateY(-2px); }

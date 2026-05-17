@@ -17,7 +17,7 @@ const MAPS = window.MAPS_RAW || [];
 const LANG = {
   en: {
     "nav.home":"Home","nav.archive":"Categories","nav.timeline":"Timeline","nav.compare":"Compare",
-    "nav.collections":"Collections","nav.learn":"Learn","nav.about":"About","nav.library":"Library",
+    "nav.atlas":"Atlas","nav.collections":"Collections","nav.learn":"Learn","nav.about":"About","nav.library":"Library",
     "nav.signin":"Sign in","nav.create":"Create account","nav.menu":"Menu","nav.search":"Search",
     "hero.eyebrow":"Est. MMXXIV — A Digital Atlas of Cartography",
     "hero.subtitle":"Explore the history of the world through maps.",
@@ -52,7 +52,7 @@ const LANG = {
   },
   es: {
     "nav.home":"Inicio","nav.archive":"Categorías","nav.timeline":"Cronología","nav.compare":"Comparar",
-    "nav.collections":"Colecciones","nav.learn":"Aprender","nav.about":"Acerca de","nav.library":"Biblioteca",
+    "nav.atlas":"Atlas","nav.collections":"Colecciones","nav.learn":"Aprender","nav.about":"Acerca de","nav.library":"Biblioteca",
     "nav.signin":"Iniciar sesión","nav.create":"Crear cuenta","nav.menu":"Menú","nav.search":"Buscar",
     "hero.eyebrow":"Est. MMXXIV — Un atlas digital de cartografía",
     "hero.subtitle":"Explora la historia del mundo a través de los mapas.",
@@ -347,7 +347,7 @@ function categoryCoverImage(catKey) {
 //   #/account                  → Profile or auth (signin/signup/recover)
 //   #/account/signin / signup / recover
 //   #/timeline #/compare #/collections #/learn #/about #/library
-const PAGES = ["home","archive","map","timeline","compare","collections","learn","article","glossary","about","library","account"];
+const PAGES = ["home","archive","map","timeline","compare","collections","learn","article","glossary","atlas","about","library","account"];
 const ALL_CATS = "_all"; // sentinel for cross-category filtered view (era pills, tag chips)
 
 function parseHash() {
@@ -441,6 +441,7 @@ function renderRoute() {
   if (page === "about") renderAbout();
   if (page === "article") renderArticle(param);
   if (page === "glossary") renderGlossary();
+  if (page === "atlas") renderAtlas();
   if (page === "account") renderAccount(param);
 }
 window.addEventListener("hashchange", renderRoute);
@@ -1229,6 +1230,44 @@ function renderMapDetail(id) {
         </section>` : ''}
       </div>
 
+      ${(() => {
+        // "Other cartographies of this region" — curated maps depicting roughly the same place but from different eras.
+        // Keying: prefer matching region/continent/country, prefer different MAP_ERA, prefer curated.
+        const targetEra = MAP_ERA[m.id];
+        const targetRegion = (m.region || '').toLowerCase();
+        const targetCountry = (m.country || '').toLowerCase();
+        const targetContinent = (m.continent || '').toLowerCase();
+        const sameRegion = (x) => {
+          if (x.id === m.id) return false;
+          const r = (x.region || '').toLowerCase();
+          const c = (x.country || '').toLowerCase();
+          const cc = (x.continent || '').toLowerCase();
+          return (
+            (targetRegion && r === targetRegion) ||
+            (targetCountry && c === targetCountry) ||
+            (targetContinent && cc === targetContinent && targetContinent !== "global")
+          );
+        };
+        const others = MAPS
+          .filter(x => x.id !== m.id && sameRegion(x) && x.renderable && MAP_ERA[x.id] !== targetEra)
+          .sort((a, b) => (b.significance ? 1 : 0) - (a.significance ? 1 : 0))
+          .slice(0, 4);
+        if (!others.length) return '';
+        const regionLabel = m.region || m.country || m.continent || 'this region';
+        return `
+        <div class="divider-ornate" style="margin: 80px 0 40px"><span class="glyph">✦ ✦ ✦</span></div>
+        <div class="spread">
+          <div>
+            <span class="eyebrow">In another life</span>
+            <h2 style="margin-top:8px">${regionLabel}, drawn in other eras</h2>
+            <p class="lede" style="margin-top:14px; max-width:60ch; font-size:16px">How other cartographers mapped this place in other times. Cross-era comparisons sit at the heart of why an archive like this exists.</p>
+          </div>
+        </div>
+        <div class="grid-cards" style="margin-top:28px">
+          ${others.map(mapCard).join("")}
+        </div>`;
+      })()}
+
       ${related.length ? `
       <div class="divider-ornate" style="margin: 80px 0 40px"><span class="glyph">✦ ✦ ✦</span></div>
       <div class="spread">
@@ -1988,6 +2027,144 @@ function renderArticle(slug) {
       </div>
     </div>
   `;
+}
+
+/* ============ ATLAS — meta-map of where the archive's maps depict ============ */
+// Very simplified continent outlines (Robinson-ish projection feel, kept abstract).
+// Each path is a polygon in viewBox 1000x500 (equirectangular-ish, 2:1).
+const ATLAS_CONTINENTS = `
+  <!-- Eurasia -->
+  <path d="M450 130 L560 110 L640 100 L740 110 L820 130 L880 160 L920 200 L900 240 L850 250 L780 240 L720 250 L640 260 L580 250 L520 240 L470 220 L440 190 Z" fill="#3a2d1d" opacity="0.55" stroke="#8a6f3e" stroke-width="0.5"/>
+  <!-- Africa -->
+  <path d="M490 230 L560 240 L600 270 L590 330 L560 380 L520 410 L490 400 L470 360 L460 310 L470 270 Z" fill="#3a2d1d" opacity="0.55" stroke="#8a6f3e" stroke-width="0.5"/>
+  <!-- North America -->
+  <path d="M150 130 L230 115 L290 130 L320 170 L310 220 L260 230 L210 220 L170 200 L140 170 Z" fill="#3a2d1d" opacity="0.55" stroke="#8a6f3e" stroke-width="0.5"/>
+  <!-- Central America / Caribbean -->
+  <path d="M240 230 L290 240 L310 260 L290 280 L260 280 L240 260 Z" fill="#3a2d1d" opacity="0.55" stroke="#8a6f3e" stroke-width="0.5"/>
+  <!-- South America -->
+  <path d="M280 290 L320 290 L340 330 L335 380 L310 420 L290 430 L270 410 L260 360 L270 320 Z" fill="#3a2d1d" opacity="0.55" stroke="#8a6f3e" stroke-width="0.5"/>
+  <!-- Australia -->
+  <path d="M820 340 L880 335 L900 360 L880 380 L830 380 L810 360 Z" fill="#3a2d1d" opacity="0.55" stroke="#8a6f3e" stroke-width="0.5"/>
+  <!-- Antarctica (strip at bottom) -->
+  <path d="M50 470 L950 470 L950 495 L50 495 Z" fill="#3a2d1d" opacity="0.3" stroke="#8a6f3e" stroke-width="0.5"/>
+`;
+
+const atlasState = {
+  filterCurated: false,
+  filterEra: "all",
+};
+
+function project(lat, lng, w = 1000, h = 500) {
+  // Equirectangular projection
+  const x = (lng + 180) / 360 * w;
+  const y = (90 - lat) / 180 * h;
+  return [x, y];
+}
+
+function renderAtlas() {
+  const root = $("#atlas-content");
+  if (!root) return;
+
+  let plotted = MAPS.filter(m => m._coords);
+  if (atlasState.filterCurated) plotted = plotted.filter(m => m.significance);
+  if (atlasState.filterEra !== "all") plotted = plotted.filter(m => MAP_ERA[m.id] === atlasState.filterEra);
+
+  // Group near-duplicate coordinates for clustering
+  const buckets = {};
+  plotted.forEach(m => {
+    const [lat, lng] = m._coords;
+    const k = `${Math.round(lat*2)/2}_${Math.round(lng*2)/2}`;
+    if (!buckets[k]) buckets[k] = { lat, lng, maps: [] };
+    buckets[k].maps.push(m);
+  });
+  const groups = Object.values(buckets);
+
+  const total = MAPS.filter(m => m._coords).length;
+  const undated = MAPS.length - total;
+
+  root.innerHTML = `
+    <div class="container-wide">
+      <div style="padding: 56px 0 24px; max-width: 760px">
+        <span class="eyebrow">Atlas</span>
+        <h1 style="margin-top:18px">The archive as geography.</h1>
+        <p class="lede" style="margin-top:18px">
+          ${fmt(total)} of the archive's ${fmt(MAPS.length)} maps have an inferred geographic centroid — derived from their <em>region</em>, <em>country</em>, or title. World maps and the ${fmt(undated)} entries without a clear region are not pinned here.
+          Centroids are approximate; this view is for navigation, not measurement.
+        </p>
+      </div>
+
+      <div class="atlas-controls">
+        <label class="toggle-row">
+          <input type="checkbox" id="atlas-curated" ${atlasState.filterCurated ? 'checked' : ''}/>
+          <span>Only curated fichas</span>
+        </label>
+        <select id="atlas-era" class="select">
+          <option value="all">All eras</option>
+          ${ERAS.map(e => `<option value="${e.key}" ${atlasState.filterEra === e.key ? 'selected' : ''}>${e.label}</option>`).join("")}
+        </select>
+        <span class="meta atlas-count">${fmt(plotted.length)} maps shown</span>
+      </div>
+
+      <div class="atlas-stage">
+        <svg viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" class="atlas-svg">
+          <!-- graticule -->
+          <g stroke="#3a2d1d" stroke-width="0.5" fill="none" opacity="0.4">
+            ${[-60,-30,0,30,60].map(lat => `<line x1="0" y1="${project(lat,0)[1]}" x2="1000" y2="${project(lat,0)[1]}"/>`).join("")}
+            ${[-150,-120,-90,-60,-30,0,30,60,90,120,150].map(lng => `<line x1="${project(0,lng)[0]}" y1="0" x2="${project(0,lng)[0]}" y2="500"/>`).join("")}
+          </g>
+          ${ATLAS_CONTINENTS}
+          <!-- map pins -->
+          <g class="atlas-pins">
+            ${groups.map(g => {
+              const [x, y] = project(g.lat, g.lng);
+              const curated = g.maps.some(m => m.significance);
+              const r = Math.min(12, 3 + Math.log2(g.maps.length + 1) * 2);
+              const cls = curated ? 'pin-curated' : 'pin';
+              const labelMap = g.maps.find(m => m.significance) || g.maps[0];
+              return `<g class="atlas-pin-group" data-pin="${labelMap.id}" data-count="${g.maps.length}" data-coords="${g.lat},${g.lng}">
+                <circle cx="${x}" cy="${y}" r="${r+2}" class="pin-hit"/>
+                <circle cx="${x}" cy="${y}" r="${r}" class="${cls}"/>
+                ${g.maps.length > 1 ? `<text x="${x}" y="${y+3}" class="pin-count">${g.maps.length}</text>` : ''}
+              </g>`;
+            }).join("")}
+          </g>
+        </svg>
+        <div id="atlas-tooltip" class="atlas-tooltip" hidden></div>
+      </div>
+
+      <p class="meta" style="margin-top:18px; text-transform:none; letter-spacing:0; font-family:var(--serif-body); font-size:13px; color:var(--ink-muted); font-style:italic">
+        Gold pins = include at least one curated ficha. Larger pins = more maps at that location. Click a pin to open its first map; hover to see the count.
+      </p>
+    </div>
+  `;
+
+  // Wire controls
+  $("#atlas-curated")?.addEventListener("change", (e) => { atlasState.filterCurated = e.target.checked; renderAtlas(); });
+  $("#atlas-era")?.addEventListener("change", (e) => { atlasState.filterEra = e.target.value; renderAtlas(); });
+
+  // Wire pins (hover for tooltip, click for navigation)
+  const tooltip = $("#atlas-tooltip");
+  $$('.atlas-pin-group').forEach(pin => {
+    const id = pin.dataset.pin;
+    const count = +pin.dataset.count;
+    const coords = pin.dataset.coords;
+    pin.addEventListener("mouseenter", (e) => {
+      const m = MAPS.find(x => x.id === id);
+      if (!m) return;
+      tooltip.innerHTML = `
+        <div class="atlas-tooltip-title">${shortTitle(m.title, 60)}${m.significance ? ' <span class="curated-mark">★</span>' : ''}</div>
+        <div class="atlas-tooltip-meta">${m.year} · ${categoryDisplay(m.category)}</div>
+        ${count > 1 ? `<div class="atlas-tooltip-other">+ ${count-1} more at this location</div>` : ''}
+      `;
+      tooltip.hidden = false;
+    });
+    pin.addEventListener("mousemove", (e) => {
+      tooltip.style.left = (e.clientX + 14) + "px";
+      tooltip.style.top  = (e.clientY + 14) + "px";
+    });
+    pin.addEventListener("mouseleave", () => { tooltip.hidden = true; });
+    pin.addEventListener("click", () => navigate("map/" + id));
+  });
 }
 
 /* ============ GLOSSARY ============ */
