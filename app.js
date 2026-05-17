@@ -267,6 +267,7 @@ function renderRoute() {
   if (page === "collections") renderCollections();
   if (page === "learn") renderLearn();
   if (page === "library") renderLibrary();
+  if (page === "about") renderAbout();
   if (page === "account") renderAccount(param);
 }
 window.addEventListener("hashchange", renderRoute);
@@ -1491,6 +1492,91 @@ function renderLearn() {
       </div>
     </article>
   `).join("");
+}
+
+/* ============ ABOUT — archive-at-a-glance stats panel ============ */
+function renderAbout() {
+  const root = $("#about-stats");
+  if (!root) return;
+
+  // Aggregate stats fresh from the dataset
+  const total = MAPS.length;
+  const curated = MAPS.filter(m => m.significance).length;
+  const dated = MAPS.filter(m => m.yearNum != null).length;
+  const renderable = MAPS.filter(m => m.renderable).length;
+  const withDesc = MAPS.filter(m => m.description && m.description.length >= 30).length;
+
+  // Source breakdown — top 5
+  const bySource = {};
+  MAPS.forEach(m => {
+    const src = m.institution ? m.institution.split(/[,;]/)[0].trim() : "(unknown)";
+    bySource[src] = (bySource[src] || 0) + 1;
+  });
+  const topSources = Object.entries(bySource).sort((a,b) => b[1]-a[1]).slice(0, 5);
+
+  // Era distribution
+  const byEra = {};
+  MAPS.forEach(m => { byEra[MAP_ERA[m.id]] = (byEra[MAP_ERA[m.id]]||0) + 1; });
+  const eraRows = ERAS.map(e => ({ key:e.key, label:e.label, range:e.range, count: byEra[e.key]||0 })).filter(r => r.count > 0).sort((a,b) => b.count - a.count);
+
+  // Category breakdown
+  const catRows = CATEGORY_META.map(c => ({ key:c.key, display:c.display, count: COUNTS.byCategory[c.key]||0 })).sort((a,b)=>b.count-a.count);
+
+  // Build HTML
+  const pct = (n) => `${Math.round(n/total*100)}%`;
+  root.innerHTML = `
+    <p style="color:var(--ink-dim); font-size:17px; line-height:1.7; margin-bottom:24px; max-width:60ch">
+      Honest numbers — what's actually in the archive today, not what we'd like to claim.
+    </p>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">${fmt(total)}</div><div class="stat-lbl">Maps catalogued</div></div>
+      <div class="stat-card"><div class="stat-num">${fmt(curated)}</div><div class="stat-lbl">With curated essay<br/><em style="font-style:normal; color:var(--ink-faint); font-size:10px">significance + biases</em></div></div>
+      <div class="stat-card"><div class="stat-num">${fmt(dated)}</div><div class="stat-lbl">Dated records<br/><em style="font-style:normal; color:var(--ink-faint); font-size:10px">${pct(dated)} of total</em></div></div>
+      <div class="stat-card"><div class="stat-num">${fmt(renderable)}</div><div class="stat-lbl">With renderable image<br/><em style="font-style:normal; color:var(--ink-faint); font-size:10px">${pct(renderable)} of total</em></div></div>
+    </div>
+
+    <div class="stats-twocol">
+      <div>
+        <span class="eyebrow">Source institutions</span>
+        <ul class="stats-list">
+          ${topSources.map(([name, n]) => `
+            <li>
+              <span class="stats-list-bar" style="width:${(n/topSources[0][1])*100}%"></span>
+              <span class="stats-list-name">${name}</span>
+              <span class="stats-list-count">${fmt(n)}</span>
+            </li>`).join("")}
+        </ul>
+        <p class="meta" style="margin-top:14px; text-transform:none; letter-spacing:0; font-family:var(--serif-body); font-style:italic; color:var(--ink-muted); font-size:12px">
+          Of 28 distinct institutions in total; the long tail is small.
+        </p>
+      </div>
+
+      <div>
+        <span class="eyebrow">By historical era</span>
+        <ul class="stats-list">
+          ${eraRows.map(r => `
+            <li>
+              <span class="stats-list-bar" style="width:${(r.count/eraRows[0].count)*100}%"></span>
+              <span class="stats-list-name">${r.label} <em style="font-style:normal; color:var(--ink-faint)">${r.range}</em></span>
+              <span class="stats-list-count">${fmt(r.count)}</span>
+            </li>`).join("")}
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-top:48px">
+      <span class="eyebrow">By category</span>
+      <ul class="stats-list stats-list-compact" style="margin-top:14px">
+        ${catRows.map(r => `
+          <li>
+            <span class="stats-list-bar" style="width:${(r.count/catRows[0].count)*100}%"></span>
+            <a class="stats-list-name" href="#/archive/${r.key}">${r.display}</a>
+            <span class="stats-list-count">${fmt(r.count)}</span>
+          </li>`).join("")}
+      </ul>
+    </div>
+  `;
 }
 
 /* ============ LIBRARY ============ */
