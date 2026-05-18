@@ -1465,6 +1465,79 @@ a.stats-list-name:hover { color: var(--gold); }
 .article-reader-body em { color: var(--ink); }
 .article-reader-body strong { color: var(--ink); font-weight: 500; }
 
+/* ============ Sequences (didactic) ============ */
+.sequence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 22px;
+  padding-bottom: 96px;
+}
+.sequence-card {
+  display: flex; flex-direction: column;
+  padding: 26px 28px;
+  background: var(--bg-surface);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-lg);
+  transition: transform .2s, border-color .15s;
+}
+.sequence-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold-deep);
+}
+.sequence-card h3 { color: var(--ink); }
+
+.sequence-steps {
+  list-style: none;
+  padding: 32px 0 0;
+  margin: 0;
+}
+.sequence-step {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 24px;
+  margin-bottom: 48px;
+}
+.sequence-step-num {
+  font-family: var(--serif-display);
+  font-size: 32px;
+  color: var(--gold);
+  border-right: 1px solid var(--divider);
+  padding-top: 6px;
+  text-align: center;
+}
+.sequence-step-body { min-width: 0; }
+.sequence-step-card {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+  padding: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  transition: border-color .15s;
+}
+.sequence-step-card:hover { border-color: var(--gold-deep); }
+.sequence-step-card .map-frame { border-radius: var(--radius-sm); }
+.sequence-step-card-body { display: flex; flex-direction: column; justify-content: center; }
+.sequence-step-text {
+  font-family: var(--serif-body);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink-dim);
+  padding: 6px 6px;
+}
+@media (max-width: 700px) {
+  .sequence-step-card { grid-template-columns: 1fr; }
+}
+.sequence-closing {
+  padding: 28px 32px;
+  background: rgba(80, 160, 110, 0.05);
+  border: 1px solid rgba(80, 160, 110, 0.2);
+  border-radius: var(--radius);
+  color: var(--ink);
+}
+
 /* ============ Glossary ============ */
 .glossary-grid {
   display: grid;
@@ -1553,6 +1626,39 @@ a.stats-list-name:hover { color: var(--gold); }
 }
 .preset-name { color: var(--ink); line-height: 1.35; }
 .preset-arrow { color: var(--gold); font-family: var(--mono); }
+
+/* ============ Teaching notes block on map detail page ============ */
+.detail-teaching {
+  padding: 22px 26px;
+  background: rgba(80, 160, 110, 0.05);
+  border: 1px solid rgba(80, 160, 110, 0.2);
+  border-radius: var(--radius);
+  margin-top: 28px;
+}
+.teaching-questions {
+  margin-top: 14px;
+  padding-left: 24px;
+  font-family: var(--serif-body);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-dim);
+}
+.teaching-questions li { margin-bottom: 10px; }
+.teaching-questions li::marker { color: var(--green); font-family: var(--mono); font-weight: 500; }
+.teaching-activity {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: rgba(80, 160, 110, 0.05);
+  border-left: 3px solid var(--green);
+  border-radius: var(--radius-sm);
+}
+.teaching-activity p {
+  margin-top: 6px;
+  font-family: var(--serif-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-dim);
+}
 
 /* ============ Citations block on map detail page ============ */
 .citations {

@@ -51,7 +51,7 @@ const LANG = {
     "footer.tagline-long":"A digital archive of historical and contemporary cartography. An independent, educational project — not affiliated with any single institution.",
     "footer.explore":"Explore","footer.archive":"Full archive","footer.atlas":"Atlas (meta-map)",
     "footer.timeline":"Timeline","footer.compare":"Compare tool","footer.collections":"Collections",
-    "footer.learn":"Learn","footer.articles":"Articles","footer.glossary":"Glossary",
+    "footer.learn":"Learn","footer.articles":"Articles","footer.sequences":"Didactic sequences","footer.glossary":"Glossary",
     "footer.about-h":"About","footer.mission":"Mission","footer.stats":"Archive at a glance",
     "footer.sources":"Sources & accuracy","footer.privacy":"Privacy & data","footer.educational":"Educational use",
     "footer.open":"An open archive",
@@ -94,7 +94,7 @@ const LANG = {
     "footer.tagline-long":"Un archivo digital de cartografía histórica y contemporánea. Un proyecto independiente y educativo, no afiliado a ninguna institución concreta.",
     "footer.explore":"Explorar","footer.archive":"Archivo completo","footer.atlas":"Atlas (meta-mapa)",
     "footer.timeline":"Cronología","footer.compare":"Herramienta de comparación","footer.collections":"Colecciones",
-    "footer.learn":"Aprender","footer.articles":"Artículos","footer.glossary":"Glosario",
+    "footer.learn":"Aprender","footer.articles":"Artículos","footer.sequences":"Secuencias didácticas","footer.glossary":"Glosario",
     "footer.about-h":"Acerca de","footer.mission":"Misión","footer.stats":"El archivo en cifras",
     "footer.sources":"Fuentes y precisión","footer.privacy":"Privacidad y datos","footer.educational":"Uso educativo",
     "footer.open":"Un archivo abierto",
@@ -368,7 +368,7 @@ function categoryCoverImage(catKey) {
 //   #/account                  → Profile or auth (signin/signup/recover)
 //   #/account/signin / signup / recover
 //   #/timeline #/compare #/collections #/learn #/about #/library
-const PAGES = ["home","archive","map","timeline","compare","collections","learn","article","glossary","atlas","about","library","account"];
+const PAGES = ["home","archive","map","timeline","compare","collections","learn","article","glossary","atlas","sequences","sequence","about","library","account"];
 const ALL_CATS = "_all"; // sentinel for cross-category filtered view (era pills, tag chips)
 
 function parseHash() {
@@ -442,6 +442,8 @@ const ROUTE_META = {
   learn:       { title: "Learn — Mappa Mundi", desc: "Essays, primers and case studies on the history of cartography. Plus a glossary of cartographic terms." },
   article:     { title: null, desc: null },
   glossary:    { title: "Glossary of cartographic terms — Mappa Mundi", desc: "Thirty definitions of cartographic terms — from mappa mundi and portolan chart to isoline, cadastre and counter-mapping. Each linked to maps that exemplify it." },
+  sequences:   { title: "Didactic sequences — Mappa Mundi", desc: "Six guided walks through the archive for teaching. Each sequence takes 3 to 5 curated maps and weaves them into a 30-to-55 minute lesson with discussion questions." },
+  sequence:    { title: null, desc: null },
   atlas:       { title: "Atlas — Mappa Mundi", desc: "An interactive meta-map showing where the archive's 1,559 maps depict, plotted by region on a world projection. Click a pin to open the map." },
   about:       { title: "About — Mappa Mundi", desc: "About this archive: mission, sources, audiences, educational use. Honest numbers on what's actually in the collection." },
   library:     { title: "My library — Mappa Mundi", desc: "Your saved maps, viewing history, notes and personal collections." },
@@ -544,6 +546,8 @@ function renderRoute() {
   if (page === "article") renderArticle(param);
   if (page === "glossary") renderGlossary();
   if (page === "atlas") renderAtlas();
+  if (page === "sequences") renderSequences();
+  if (page === "sequence") renderSequence(param);
   if (page === "account") renderAccount(param);
 }
 window.addEventListener("hashchange", renderRoute);
@@ -1321,6 +1325,20 @@ function renderMapDetail(id) {
           <span class="eyebrow" style="color:var(--terracotta)">Distortions &amp; limitations</span>
           <h3 style="margin-top:8px">What this map gets wrong, or leaves out</h3>
           <p style="margin-top:10px">${m.biases}</p>
+        </section>` : ''}
+        ${m.teachingNotes ? `<section class="detail-teaching">
+          <span class="eyebrow" style="color:var(--green)">For the classroom</span>
+          <h3 style="margin-top:8px">Discussion questions &amp; activity</h3>
+          <ol class="teaching-questions">
+            ${m.teachingNotes.questions.map(q => `<li>${escapeHtml(q)}</li>`).join("")}
+          </ol>
+          <div class="teaching-activity">
+            <span class="meta">Classroom activity</span>
+            <p>${escapeHtml(m.teachingNotes.activity)}</p>
+          </div>
+          <p class="meta" style="margin-top:14px; text-transform:none; letter-spacing:0; font-family:var(--serif-body); font-size:12px; color:var(--ink-muted); font-style:italic">
+            Designed for high-school / early-university level. History and critical-thinking emphasis. Adapt freely.
+          </p>
         </section>` : ''}
         ${(m.tags && m.tags.length) ? `<section>
           <span class="eyebrow">Themes &amp; tags</span>
@@ -2407,6 +2425,176 @@ function renderAtlas() {
     pin.addEventListener("mouseleave", () => { tooltip.hidden = true; });
     pin.addEventListener("click", () => navigate("map/" + id));
   });
+}
+
+/* ============ SEQUENCES — didactic groupings for teachers ============
+ * Each sequence is a guided walk through 3–5 maps with an intro, transitions
+ * between consecutive maps, and a closing reflection. Designed so a teacher can
+ * use the sequence as a 30–45 minute lesson plan.
+ */
+const SEQUENCES = [
+  {
+    slug: "before-after-tordesillas",
+    title: "Before and after the Treaty of Tordesillas",
+    eyebrow: "Sequence · 4 maps · ≈ 45 min",
+    lede: "In June 1494, Spain and Portugal signed a treaty in the Castilian town of Tordesillas dividing the non-Christian world between them along a meridian in the Atlantic. The treaty was an agreement between two crowns about places almost none of them had seen. This sequence walks through four maps that show what that meridian did, and what it left out.",
+    maps: ["seed_056", "seed_006", "seed_013", "seed_060"],
+    transitions: [
+      "Martellus's map shows the European geographical imagination right before Columbus crossed. Asia is overextended eastward — making the Atlantic look small. Columbus consulted Martellus-style geography. The Tordesillas line had not yet been drawn, but the cartographic argument that the Atlantic was crossable was already on the page.",
+      "Eight years after Tordesillas, the Cantino Planisphere appears — the first map to show the meridian as a confident vertical stroke through the Atlantic. The Caribbean appears for the first time. African coastlines are now precise; Brazil is sketched. A line on a map has become a political claim about half a planet.",
+      "Juan de la Cosa, who sailed with Columbus, drew his world map around 1500. The Old World is rendered in mature portolan style. The New World is sketched in green, intentionally provisional. This is the moment Tordesillas becomes geographical — when the cartographic instrument starts to depict the territories that the line claimed.",
+      "Eighty years on, the Spanish Habsburg empire of 1580 unifies the Iberian crowns and inherits Portuguese possessions. The Tordesillas line is no longer visible on the map; one colour now covers everything from Manila to Mexico City to Brussels. This is what the 1494 meridian eventually produced."
+    ],
+    closing: "The Treaty of Tordesillas is a paradigmatic case of how cartography produces, rather than records, political reality. The meridian was an abstraction; through the maps that followed, it became an empire. Questions to leave the room with: what other maps in the archive show meridians or borders that did the same kind of work? What does it mean to map a place before having visited it?"
+  },
+  {
+    slug: "how-earth-was-measured",
+    title: "How the Earth was measured",
+    eyebrow: "Sequence · 5 maps · ≈ 55 min",
+    lede: "The history of cartography is a history of measuring devices. Astrolabes, chronometers, theodolites, satellites. This sequence walks through five maps that mark turning points in how the Earth has been pinned to numbers — and what each measurement choice made visible or invisible.",
+    maps: ["seed_009", "seed_002", "seed_007", "seed_049", "seed_023"],
+    transitions: [
+      "Ptolemy's coordinate system, recovered in Renaissance Florence, taught Europe that places on Earth could be located by paired numbers — latitude and longitude. The mathematical lattice was the radical idea. The actual coordinates were often wrong; the framework was right.",
+      "Al-Idrisi's Tabula Rogeriana (1154) — five centuries before Mercator — measured distances in days of travel, not in degrees. It captures a different kind of cartographic intelligence: knowledge as gathered, indexed by experience, oriented south-up.",
+      "Mercator's projection (1569) is built for one task: making compass bearings into straight lines. Everything else is sacrificed to that goal. It is a tool, not a worldview — but it became a worldview anyway.",
+      "Captain Cook's three Pacific voyages (1768–79) added precision: marine chronometers solved the longitude problem; astronomical observation became routine. The Pacific was made cartographically European in three voyages. Polynesian wayfinding traditions, equally sophisticated by their own metrics, were rendered invisible.",
+      "NASA's Blue Marble (2002) is composed from satellite imagery — measurement at planetary scale, in spectra that no human eye can see. The Earth becomes one body. The question 'where am I' becomes solvable to one metre."
+    ],
+    closing: "Each measurement system answered the question of its moment: Ptolemy needed a framework; al-Idrisi needed travel times; Mercator needed compass bearings; Cook needed longitude; NASA needed satellite mosaics. What question is your phone's GPS answering? And what are the kinds of geographic knowledge it makes harder to imagine?"
+  },
+  {
+    slug: "what-gets-centered",
+    title: "What gets centred",
+    eyebrow: "Sequence · 4 maps · ≈ 40 min",
+    lede: "Every map has a centre. The choice of where to put it is rarely neutral — it is often the most important argument the map makes. This sequence asks what changes when the centre changes.",
+    maps: ["seed_003", "seed_002", "seed_007", "seed_023"],
+    transitions: [
+      "The Hereford Mappa Mundi puts Jerusalem at the centre, with east at the top. The map's centre is theological: salvation history. The geographic world arranges itself around the sacred.",
+      "Al-Idrisi's Tabula Rogeriana, two centuries earlier, oriented its map south-up — but its functional centre is the Mediterranean, the sea where trade, ideas, and people moved. The choice was cultural, not theological, and it works.",
+      "Mercator's 1569 projection places Europe near the centre — not deliberately, but by convention, since the prime meridian on most reproductions runs through London or Paris. The visual result is a continent of average size made to look central.",
+      "NASA's Blue Marble has no political boundaries, but it does have a chosen centring: most reproductions show Africa central. Pacific-centred versions exist; they make Asia and the Americas look like edges. The 'true' centre of Earth depends on which face is shown."
+    ],
+    closing: "Centre is choice. Sometimes the choice is theological, sometimes practical, sometimes accidental, sometimes political. Ask students to draw the map of their own city. Where would they put the centre — and why?"
+  },
+  {
+    slug: "arctic-myth-to-measurement",
+    title: "The Arctic: from myth to measurement",
+    eyebrow: "Sequence · 3 maps · ≈ 30 min",
+    lede: "For most of the history of European cartography, the North Pole was less a place than an inference. This sequence follows three centuries of how Europeans drew the Arctic — from a magnetic mountain that did not exist to satellite imagery in real time.",
+    maps: ["seed_017", "seed_049", "seed_044"],
+    transitions: [
+      "Mercator's 1606 Arctic map is built around the Rupes Nigra, a legendary 33-mile-tall magnetic mountain. Mercator reasoned from compass behaviour to geography. He was wrong about almost every detail, but his reasoning was rigorous. The map is an artefact of careful inference, not of observation.",
+      "Cook's third voyage (1776–79) sought a Northwest Passage from the Pacific side. He sailed into the Bering Strait and was turned back by ice. The map of his voyages turns blank space into mapped coastline — but the central Arctic is still terra incognita.",
+      "Natural Earth's contemporary shaded-relief raster shows the Arctic with the same fidelity as any other part of the world — derived from satellite altimetry and bathymetry. The Rupes Nigra is gone. So is the speculation. But the political geography of the Arctic — disputed sovereignty over a melting basin — is a new layer with new uncertainties."
+    ],
+    closing: "Three different epistemic regimes — medieval-Christian inference, Enlightenment-imperial voyaging, satellite measurement — produce three different Arctics. What new uncertainties does our most recent regime produce, and how will the Arctic look on a map drawn in 2100?"
+  },
+  {
+    slug: "two-ages-of-empire",
+    title: "Two ages of empire compared",
+    eyebrow: "Sequence · 3 maps · ≈ 40 min",
+    lede: "Empires of two thousand years apart produce different kinds of cartography. This sequence compares the Roman world at 117 CE, the Mongol khanates in 1294, and the British Empire in 1886 — to ask what kind of object a 'world empire' is, and how it gets drawn.",
+    maps: ["seed_036", "seed_037", "seed_032"],
+    transitions: [
+      "The Roman Empire at 117 CE is rendered here in modern cartographic conventions Romans themselves did not have. The empire ringed the Mediterranean; the limes (frontier defences) appear as continuous lines. The map flattens what was a zone of variable control into a confident boundary.",
+      "The Mongol Empire at the death of Kublai Khan (1294) was the largest contiguous land empire in human history. The map shows the four khanates as a single block — but they were politically distinct, drifting apart already. The single colour is a simplification that has its own consequences.",
+      "The British Empire of 1886, in Walter Crane's propagandistic Imperial Federation map, colours every possession imperial red. Britannia is enthroned at the centre. This is empire as visual argument — the choice of colour, projection, and frame is openly persuasive."
+    ],
+    closing: "Roman territory was administered from cities; Mongol authority was tributary; British control was naval and commercial. The three maps make all three look like the same kind of object — a coloured block on a flat surface. What does that visual sameness conceal? Where else in the present do we see empire taking forms that maps don't yet know how to draw?"
+  },
+  {
+    slug: "first-thematic-maps",
+    title: "The first thematic maps",
+    eyebrow: "Sequence · 3 maps · ≈ 35 min",
+    lede: "A thematic map argues a claim, rather than depicting a region. The 19th century is when this genre is born. This sequence walks through three founding examples — the geological, the epidemiological, the statistical — and asks what made the thematic map possible at that moment.",
+    maps: ["seed_021", "seed_052", "seed_053"],
+    transitions: [
+      "William Smith's 1815 geological map of England is the founding document of stratigraphic geology — and the first national-scale thematic map of any kind. Smith's insight that strata could be identified by their fossils displaced a biblical chronology and produced a working tool that predicted coal seams.",
+      "John Snow's 1854 cholera map maps disease deaths onto a city street grid, showing the cluster around the Broad Street pump. The map made a causal argument against the miasma theory — that cholera was waterborne. It is conventionally cited as the founding case of epidemiological cartography.",
+      "Charles Joseph Minard's 1869 flow map of Napoleon's 1812 Russian campaign carries six variables on a single page: army size, geography, direction, temperature, time, and casualties. It is anti-imperial: an old man's accounting of an emperor's catastrophe."
+    ],
+    closing: "Thematic mapping was made possible by the 19th century's overlap of state statistics, mass print, and reform politics. Each of these three maps argues something. What does the modern thematic map (a COVID-19 dashboard, a heat-vulnerability index, an election forecast) argue? Who is its Minard, and is it being read carefully?"
+  },
+];
+
+function renderSequences() {
+  const root = $("#sequences-content");
+  if (!root) return;
+  root.innerHTML = `
+    <div class="container">
+      <div style="padding: 72px 0 32px; max-width: 760px">
+        <span class="eyebrow">For teachers</span>
+        <h1 style="margin-top:18px">Didactic sequences</h1>
+        <p class="lede" style="margin-top:18px">
+          Six guided walks through the archive. Each sequence takes 3 to 5 curated maps and weaves them into a 30-to-55 minute lesson with an introduction, transitions between maps, and a closing reflection. Designed for high-school or early-university teaching with a history and critical-thinking emphasis.
+        </p>
+      </div>
+      <div class="sequence-grid">
+        ${SEQUENCES.map(s => `
+          <a class="sequence-card" href="#/sequence/${s.slug}">
+            <span class="eyebrow">${s.eyebrow}</span>
+            <h3 style="margin-top:10px">${s.title}</h3>
+            <p style="margin-top:12px; color:var(--ink-dim); font-size:14px; line-height:1.55">${s.lede.split('.').slice(0,2).join('.') + '.'}</p>
+            <span class="meta" style="margin-top:14px; color:var(--gold); display:inline-block">Open sequence →</span>
+          </a>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderSequence(slug) {
+  const root = $("#sequence-content");
+  if (!root) return;
+  const seq = SEQUENCES.find(s => s.slug === slug);
+  if (!seq) {
+    root.innerHTML = `
+      <div class="container" style="padding:96px 0; max-width:720px; text-align:center">
+        <span class="eyebrow" style="color:var(--terracotta)">404 · Sequence not found</span>
+        <h1 style="margin-top:18px">No sequence matches <code style="font-family:var(--mono); font-size:0.6em; color:var(--ink-muted)">${escapeAttr(slug || '(empty)')}</code>.</h1>
+        <a class="btn btn-primary" href="#/sequences" style="margin-top:28px">Back to all sequences</a>
+      </div>`;
+    return;
+  }
+  setPageMeta(`${seq.title} — Mappa Mundi sequence`, seq.lede.slice(0,200), "sequence/" + slug);
+  const steps = seq.maps.map(id => MAPS.find(m => m.id === id)).filter(Boolean);
+  root.innerHTML = `
+    <div class="container article-reader">
+      <a href="#/sequences" class="meta" style="display:inline-block; margin-top:48px; color:var(--ink-muted)">← All sequences</a>
+      <header class="article-reader-header">
+        <span class="eyebrow">${seq.eyebrow}</span>
+        <h1 style="margin-top:14px">${seq.title}</h1>
+        <p class="lede" style="margin-top:18px">${seq.lede}</p>
+      </header>
+      <ol class="sequence-steps">
+        ${steps.map((m, i) => `
+          <li class="sequence-step">
+            <div class="sequence-step-num">${i+1}</div>
+            <div class="sequence-step-body">
+              <a class="sequence-step-card" href="#/map/${m.id}">
+                <div class="map-frame map-frame-img" style="aspect-ratio:4/3">${imageEl(m, {eager:true})}</div>
+                <div class="sequence-step-card-body">
+                  <span class="meta">${m.year}${m.author ? ' · ' + shortText(m.author, 40) : ''}</span>
+                  <h3 style="margin-top:6px">${m.title}</h3>
+                  <span class="meta" style="margin-top:10px; display:inline-block; color:var(--gold)">Open this map →</span>
+                </div>
+              </a>
+              <p class="sequence-step-text">${seq.transitions[i] || ''}</p>
+            </div>
+          </li>
+        `).join("")}
+      </ol>
+      <div class="divider-ornate" style="margin: 64px 0 28px"><span class="glyph">✦ ✦ ✦</span></div>
+      <section class="sequence-closing">
+        <span class="eyebrow">Closing</span>
+        <h3 style="margin-top:10px">Take the conversation further</h3>
+        <p style="margin-top:14px; font-size:17px; line-height:1.7">${seq.closing}</p>
+      </section>
+      <div style="text-align:center; margin-top: 48px">
+        <a class="btn btn-ghost" href="#/sequences">← All sequences</a>
+      </div>
+    </div>
+  `;
 }
 
 /* ============ GLOSSARY ============ */
