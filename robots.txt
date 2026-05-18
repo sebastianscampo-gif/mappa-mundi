@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sebastianscampo-gif.github.io/mappa-mundi/sitemap.xml

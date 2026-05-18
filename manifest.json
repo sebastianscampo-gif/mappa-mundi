@@ -1,0 +1,17 @@
+{
+  "name": "Mappa Mundi — A Digital Archive of Maps",
+  "short_name": "Mappa Mundi",
+  "description": "A digital archive of 1,559 historical and contemporary maps with curated essays on their significance, interpretation, and biases.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#15110b",
+  "theme_color": "#15110b",
+  "orientation": "any",
+  "lang": "en",
+  "categories": ["education", "reference", "books"],
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "og-image.png", "sizes": "1200x630", "type": "image/png" }
+  ]
+}

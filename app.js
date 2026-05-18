@@ -53,7 +53,7 @@ const LANG = {
     "footer.timeline":"Timeline","footer.compare":"Compare tool","footer.collections":"Collections",
     "footer.learn":"Learn","footer.articles":"Articles","footer.glossary":"Glossary",
     "footer.about-h":"About","footer.mission":"Mission","footer.stats":"Archive at a glance",
-    "footer.sources":"Sources & accuracy","footer.educational":"Educational use",
+    "footer.sources":"Sources & accuracy","footer.privacy":"Privacy & data","footer.educational":"Educational use",
     "footer.open":"An open archive",
     "footer.coords":"Latitudes are decimal · Bearings are true · South is sometimes up",
     "lang.toggle":"Español",
@@ -96,7 +96,7 @@ const LANG = {
     "footer.timeline":"Cronología","footer.compare":"Herramienta de comparación","footer.collections":"Colecciones",
     "footer.learn":"Aprender","footer.articles":"Artículos","footer.glossary":"Glosario",
     "footer.about-h":"Acerca de","footer.mission":"Misión","footer.stats":"El archivo en cifras",
-    "footer.sources":"Fuentes y precisión","footer.educational":"Uso educativo",
+    "footer.sources":"Fuentes y precisión","footer.privacy":"Privacidad y datos","footer.educational":"Uso educativo",
     "footer.open":"Un archivo abierto",
     "footer.coords":"Latitudes en decimal · Rumbos verdaderos · El sur a veces va arriba",
     "lang.toggle":"English",
@@ -274,7 +274,12 @@ const icons = {
 };
 
 /* ---------- shared bits ---------- */
-function escapeAttr(s) { return String(s || "").replace(/"/g, "&quot;"); }
+function escapeAttr(s) { return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+// Full HTML-escape for text injected with innerHTML. Use this for any user-provided string
+// (notes, annotations, profile name) and anywhere caller-supplied data needs to render as text.
+function escapeHtml(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 function shortTitle(t, max = 80) { return t && t.length > max ? t.slice(0, max-1).trim() + "…" : (t || "Untitled"); }
 function shortText(t, max = 180) { return t && t.length > max ? t.slice(0, max-1).trim() + "…" : t || ""; }
 function categoryMeta(key) { return CATEGORY_META.find(c => c.key === key); }
@@ -426,6 +431,73 @@ function restoreFiltersFromUrl(query) {
   if (query.to)   { const n = parseInt(query.to, 10);   if (!isNaN(n)) archiveState.yearTo = n; }
   if (query.sort) archiveState.sort = query.sort;
 }
+// Per-route page metadata. SEO + browser tab labelling.
+const ROUTE_META = {
+  home:        { title: "Mappa Mundi — A digital archive of maps", desc: "1,559 maps spanning 12 centuries. 40 curated essays. Search, compare, and read what each map reveals." },
+  archive:     { title: "Categories — Mappa Mundi", desc: "Browse 1,559 maps across 16 archive categories: world maps, ancient, medieval, renaissance, colonial, climate, topographic, indigenous and more." },
+  map:         { title: null, desc: null }, // set dynamically per map
+  timeline:    { title: "Timeline — Mappa Mundi", desc: "Five thousand years of cartography organized by historical period. Scroll horizontally through nine eras from ancient civilizations to the contemporary world." },
+  compare:     { title: "Compare maps — Mappa Mundi", desc: "Compare two maps side-by-side or in overlay. Five suggested pairings to start, or pick any two from the archive." },
+  collections: { title: "Collections — Mappa Mundi", desc: "Eleven curated themed collections of maps with introductory essays — empires, colonialism, climate, indigenous cartographies and more." },
+  learn:       { title: "Learn — Mappa Mundi", desc: "Essays, primers and case studies on the history of cartography. Plus a glossary of cartographic terms." },
+  article:     { title: null, desc: null },
+  glossary:    { title: "Glossary of cartographic terms — Mappa Mundi", desc: "Thirty definitions of cartographic terms — from mappa mundi and portolan chart to isoline, cadastre and counter-mapping. Each linked to maps that exemplify it." },
+  atlas:       { title: "Atlas — Mappa Mundi", desc: "An interactive meta-map showing where the archive's 1,559 maps depict, plotted by region on a world projection. Click a pin to open the map." },
+  about:       { title: "About — Mappa Mundi", desc: "About this archive: mission, sources, audiences, educational use. Honest numbers on what's actually in the collection." },
+  library:     { title: "My library — Mappa Mundi", desc: "Your saved maps, viewing history, notes and personal collections." },
+  account:     { title: "Account — Mappa Mundi", desc: "Sign in to save maps, take notes, and pick up where you left off." },
+};
+
+function setPageMeta(title, desc, canonicalPath) {
+  if (title) document.title = title;
+  const descEl = document.querySelector('meta[name="description"]');
+  if (descEl && desc) descEl.setAttribute("content", desc);
+  // Update Open Graph too so social sharing of inner pages works correctly
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  const ogDesc = document.querySelector('meta[property="og:description"]');
+  const ogUrl = document.querySelector('meta[property="og:url"]');
+  if (ogTitle && title) ogTitle.setAttribute("content", title);
+  if (ogDesc && desc) ogDesc.setAttribute("content", desc);
+  if (ogUrl && canonicalPath) ogUrl.setAttribute("content", location.origin + location.pathname + "#/" + canonicalPath);
+  // Canonical link
+  let canonical = document.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    document.head.appendChild(canonical);
+  }
+  canonical.href = location.origin + location.pathname + (canonicalPath ? "#/" + canonicalPath : "");
+}
+
+// Structured data (Schema.org) for the current map detail page.
+// Helps search engines and AI crawlers understand the page as a cartographic record.
+function setStructuredDataForMap(m) {
+  const existing = document.getElementById("ld-map");
+  if (existing) existing.remove();
+  if (!m) return;
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Map",
+    "name": m.title,
+    "description": m.description || m.historical_context || `Map from the Mappa Mundi archive.`,
+    "creator": m._authorIsContributor ? undefined : (m.author || undefined),
+    "dateCreated": m.year,
+    "spatialCoverage": m.region || m.country || m.continent || undefined,
+    "image": m.renderable ? m.download_url : undefined,
+    "url": location.origin + location.pathname + "#/map/" + m.id,
+    "license": m.license || undefined,
+    "isAccessibleForFree": true,
+    "isPartOf": { "@type":"Collection", "name":"Mappa Mundi archive", "url": location.origin + location.pathname },
+    "sourceOrganization": m.institution || undefined,
+  };
+  Object.keys(ld).forEach(k => ld[k] === undefined && delete ld[k]);
+  const script = document.createElement("script");
+  script.type = "application/ld+json";
+  script.id = "ld-map";
+  script.textContent = JSON.stringify(ld);
+  document.head.appendChild(script);
+}
+
 function renderRoute() {
   const { page, param, query } = parseHash();
   $$(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + page));
@@ -433,6 +505,11 @@ function renderRoute() {
   window.scrollTo({ top: 0, behavior: "instant" });
   // If we're leaving the map detail page OR the compare page, drop any window listeners they registered
   if (page !== "map" && page !== "compare") { _viewerCleanup?.(); _viewerCleanup = null; }
+  // Update <title>, description, canonical, OG. Per-route overrides happen below.
+  const meta = ROUTE_META[page] || ROUTE_META.home;
+  setPageMeta(meta.title, meta.desc, page === "home" ? "home" : page + (param ? "/" + param : ""));
+  // Clear any map-specific structured data when leaving the map page
+  if (page !== "map") { const ld = document.getElementById("ld-map"); if (ld) ld.remove(); }
   if (page === "map") renderMapDetail(param || (MAPS[0] && MAPS[0].id));
   if (page === "archive") {
     // Special sentinels and category keys come in via param
@@ -1123,6 +1200,11 @@ function renderMapDetail(id) {
   }
 
   Account.recordView(m.id); // track viewing history while user is signed in
+  // Per-map SEO metadata
+  const metaTitle = `${m.title} (${m.year}) — Mappa Mundi`;
+  const metaDesc = (m.description || m.historical_context || `${m.title}, a map from the Mappa Mundi archive.`).slice(0, 200);
+  setPageMeta(metaTitle, metaDesc, "map/" + m.id);
+  setStructuredDataForMap(m);
 
   const related = MAPS.filter(x => x.id !== m.id && x.category === m.category && x.renderable).slice(0, 6);
   const isSaved = Account.isSaved(m.id);
@@ -1405,13 +1487,13 @@ function bindViewer(m) {
     if (!annotationLayer) return;
     const anns = annotationsFor(m.id);
     annotationLayer.innerHTML = anns.map(a => `
-      <button class="annotation-pin" data-ann-id="${a.id}" style="left:${a.x*100}%; top:${a.y*100}%" title="${escapeAttr(a.text)}">
+      <button class="annotation-pin" data-ann-id="${escapeAttr(a.id)}" style="left:${a.x*100}%; top:${a.y*100}%" title="${escapeAttr(a.text)}">
         <span class="annotation-num">${anns.indexOf(a)+1}</span>
       </button>
     `).join("") + anns.map((a, i) => `
       <div class="annotation-flyout" data-ann-flyout="${a.id}" hidden style="left:${a.x*100}%; top:${a.y*100}%">
         <div class="annotation-flyout-head">Note #${i+1}</div>
-        <p>${escapeAttr(a.text)}</p>
+        <p>${escapeHtml(a.text)}</p>
         <div class="row" style="justify-content:space-between; margin-top:6px">
           <span class="meta" style="font-size:9px">${new Date(a.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
           <button class="annotation-remove" data-ann-remove="${a.id}">Remove</button>
@@ -2158,6 +2240,9 @@ function renderArticle(slug) {
   if (!root) return;
   const article = ARTICLES.find(a => a.slug === slug);
   const body = ARTICLE_BODIES[slug];
+  if (article && body) {
+    setPageMeta(`${article.title} — Mappa Mundi`, article.excerpt.slice(0, 200), "article/" + slug);
+  }
   if (!article || !body) {
     root.innerHTML = `
       <div class="container" style="padding: 96px 0; max-width:720px; text-align:center">
@@ -2513,7 +2598,7 @@ function renderLibrary() {
             <span class="meta">on</span>
             <a href="#/map/${n.mapId}" class="link-underline">${shortTitle(target?.title || "Unknown map", 60)}</a>
           </div>
-          <p>${escapeAttr(n.text)}</p>
+          <p>${escapeHtml(n.text)}</p>
           <div class="row" style="justify-content:space-between">
             <span class="meta">${when}</span>
             <button class="btn-ghost" data-remove-note="${n.id}" style="background:transparent; border:0; color:var(--ink-faint); font-family:var(--mono); font-size:10px; letter-spacing:0.06em; cursor:pointer; padding:0">Remove</button>
@@ -2721,9 +2806,9 @@ function renderAccountDashboard(root) {
         </div>
         <div>
           <span class="eyebrow">Signed in as</span>
-          <h1 style="margin-top:10px">${u.name}</h1>
+          <h1 style="margin-top:10px">${escapeHtml(u.name)}</h1>
           <div class="meta-row" style="margin-top:10px">
-            <span class="meta">${u.email}</span><span class="dot"></span>
+            <span class="meta">${escapeHtml(u.email)}</span><span class="dot"></span>
             <span class="meta">Joined ${new Date(u.createdAt).toLocaleDateString("en-GB",{month:"short",year:"numeric"})}</span><span class="dot"></span>
             <span class="meta">${(u.savedMaps||[]).length} saved · ${(u.history||[]).length} viewed</span>
           </div>
@@ -2994,7 +3079,7 @@ function renderNavAccount() {
         <span class="account-avatar account-avatar-sm" style="background:${u.avatarColor}">
           <span>${Account.initials(u.name)}</span>
         </span>
-        <span class="nav-avatar-name hide-mobile">${u.name.split(/\s+/)[0]}</span>
+        <span class="nav-avatar-name hide-mobile">${escapeHtml(u.name.split(/\s+/)[0])}</span>
         <span class="nav-avatar-chevron">▾</span>
       </button>
       <div class="nav-avatar-menu" id="nav-avatar-menu" hidden>
@@ -3003,8 +3088,8 @@ function renderNavAccount() {
             <span>${Account.initials(u.name)}</span>
           </span>
           <div style="min-width:0">
-            <div class="nav-avatar-menu-name">${u.name}</div>
-            <div class="nav-avatar-menu-email">${u.email}</div>
+            <div class="nav-avatar-menu-name">${escapeHtml(u.name)}</div>
+            <div class="nav-avatar-menu-email">${escapeHtml(u.email)}</div>
           </div>
         </div>
         <a class="nav-avatar-menu-item" href="#/account" data-close-menu>My account</a>
@@ -3245,9 +3330,10 @@ function runSmokeTests() {
     console.group("%c[Mappa Mundi smoke tests] FAILED", "color: oklch(60% 0.15 25); font-weight: bold");
     failures.forEach(f => console.warn("✗", f));
     console.groupEnd();
-  } else {
-    console.log("%c[Mappa Mundi smoke tests] %c✓ all 9 checks passed", "color: oklch(74% 0.11 78); font-weight: bold", "color: oklch(60% 0.06 150)");
   }
+  // No log on success — keep the console clean in production.
+  // Inspect window.__mappaSmoke to see counts and timestamps if needed.
+  window.__mappaSmoke = { passed: failures.length === 0, failures, ranAt: new Date().toISOString() };
   return failures.length === 0;
 }
 

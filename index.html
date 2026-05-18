@@ -27,6 +27,7 @@
 <meta name="twitter:image" content="og-image.png"/>
 
 <meta name="theme-color" content="#15110b"/>
+<link rel="manifest" href="manifest.json"/>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -337,12 +338,24 @@
       </div>
     </section>
 
+    <section class="about-section" id="about-privacy">
+      <div class="about-grid">
+        <h3>Privacy &amp; data</h3>
+        <div>
+          <p>Mappa Mundi runs entirely in your browser. There is no backend that stores your data on a server.</p>
+          <p style="margin-top:16px">If you create an account or save maps, all that information — your name, email (used only as a local identifier), password hash, saved maps, viewing history, notes and annotations — is stored in your browser's <strong>localStorage</strong>, on your device. Nothing is transmitted to us or to anyone else.</p>
+          <p style="margin-top:16px">No cookies are set. No analytics are loaded. Map images are fetched directly from the source institutions (Library of Congress, Wikimedia Commons, etc.); those institutions may keep their own access logs.</p>
+          <p style="margin-top:16px">Because everything lives in your browser, clearing your browser data clears your account. The "Delete my account" button in Settings → Security removes it intentionally and immediately.</p>
+        </div>
+      </div>
+    </section>
+
     <section class="about-section" id="about-educational">
       <div class="about-grid">
         <h3>Educational use</h3>
         <div>
           <p>All records on Mappa Mundi are free to consult. Maps reproduced under licence from source institutions are marked accordingly; public-domain works are linked at their archival resolution on the source institution's site.</p>
-          <p style="margin-top:16px">Mappa Mundi is an independent project, not affiliated with any of the source institutions. Submissions, corrections, and partnership enquiries can be addressed to the project maintainers; replace this line with your real contact details before publishing.</p>
+          <p style="margin-top:16px">Mappa Mundi is an independent project, not affiliated with any of the source institutions. Open submissions, corrections, and partnership enquiries: please <a class="link-underline" style="color:var(--gold)" href="https://github.com/sebastianscampo-gif/mappa-mundi/issues" target="_blank" rel="noopener">open an issue on GitHub</a>. The application code is released under the MIT licence; map content is distributed under the licence stated on each record.</p>
         </div>
       </div>
     </section>
@@ -464,6 +477,7 @@
           <li><a href="#/about?section=about-mission" data-i18n="footer.mission">Mission</a></li>
           <li><a href="#/about?section=about-stats" data-i18n="footer.stats">Archive at a glance</a></li>
           <li><a href="#/about?section=about-sources" data-i18n="footer.sources">Sources &amp; accuracy</a></li>
+          <li><a href="#/about?section=about-privacy" data-i18n="footer.privacy">Privacy &amp; data</a></li>
           <li><a href="#/about?section=about-educational" data-i18n="footer.educational">Educational use</a></li>
         </ul>
       </div>

@@ -5,7 +5,7 @@
 //   - Stale-while-revalidate for static assets: serve cache immediately AND fetch fresh in background
 //   - Bumping CACHE_VERSION invalidates older caches and forces fresh shell
 
-const CACHE_VERSION = "mappa-v3";
+const CACHE_VERSION = "mappa-v4";
 const SHELL = [
   "./",
   "./index.html",
@@ -17,6 +17,7 @@ const SHELL = [
   "./maps.js",
   "./favicon.svg",
   "./og-image.png",
+  "./manifest.json",
 ];
 
 self.addEventListener("install", (e) => {

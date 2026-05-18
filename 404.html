@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Page not found — Mappa Mundi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex"/>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+<link rel="stylesheet" href="styles.css"/>
+<script>
+  // If GitHub Pages routed the user here for a path that should be a hash route
+  // (e.g. /mappa-mundi/some-typo), preserve the path as a hash and bounce to index.
+  // This lets old or shortened links land in our SPA.
+  (function () {
+    var path = location.pathname.replace(/^\/mappa-mundi\//, "").replace(/^\//, "");
+    if (path && path !== "404.html") {
+      location.replace("/mappa-mundi/#/" + path);
+    }
+  })();
+</script>
+<style>
+  body { background: var(--bg-deep); color: var(--ink); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; font-family: var(--serif-body); }
+  .panel { max-width: 520px; text-align: center; }
+  h1 { font-size: clamp(36px, 5vw, 64px); margin-bottom: 16px; }
+  .eyebrow { color: var(--terracotta); }
+  p { color: var(--ink-dim); line-height: 1.6; margin-bottom: 24px; }
+  a { display: inline-block; padding: 12px 22px; background: var(--gold); color: oklch(15% 0.01 60); border-radius: 999px; text-decoration: none; font-family: var(--sans); font-size: 13px; letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <span class="eyebrow">404 · Not found</span>
+    <h1>This page doesn't exist.</h1>
+    <p>You may have followed an outdated link, mistyped a URL, or the record you were looking for has been removed from the archive.</p>
+    <a href="./">← Return to Mappa Mundi</a>
+  </div>
+</body>
+</html>

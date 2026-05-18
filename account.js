@@ -12,14 +12,25 @@
   const USERS_KEY = "mappaUsers";
   const CURRENT_KEY = "mappaCurrentEmail";
 
+  // All localStorage access is wrapped — private-browsing modes and some
+  // policy-locked browsers throw when you try to write, and we don't want
+  // those throws to break the rest of the page.
   function loadUsers() {
     try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; } catch { return {}; }
   }
-  function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
-  function currentEmail() { return localStorage.getItem(CURRENT_KEY); }
+  function saveUsers(u) {
+    try { localStorage.setItem(USERS_KEY, JSON.stringify(u)); } catch (e) {
+      console.warn("[Account] localStorage unavailable — changes won't persist this session.", e);
+    }
+  }
+  function currentEmail() {
+    try { return localStorage.getItem(CURRENT_KEY); } catch { return null; }
+  }
   function setCurrentEmail(email) {
-    if (email) localStorage.setItem(CURRENT_KEY, email);
-    else localStorage.removeItem(CURRENT_KEY);
+    try {
+      if (email) localStorage.setItem(CURRENT_KEY, email);
+      else localStorage.removeItem(CURRENT_KEY);
+    } catch (e) { console.warn("[Account] localStorage unavailable.", e); }
   }
 
   // Tiny non-cryptographic hash (good enough for a prototype)
