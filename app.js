@@ -42,9 +42,14 @@ const LANG = {
     "detail.century":"Century","detail.era":"Era","detail.country":"Country / Area",
     "detail.continent":"Continent","detail.maptype":"Map type","detail.language":"Language",
     "detail.category":"Category","detail.source":"Source","detail.license":"License","detail.status":"Status",
-    "detail.shows":"What it shows","detail.context":"How this map came to be made",
-    "detail.reveals":"What the map reveals","detail.significance":"Significance",
-    "detail.meaning":"Political, cultural, or scientific stakes","detail.biases":"What this map gets wrong, or leaves out",
+    "detail.shows":"What it shows","detail.shows-eye":"About this map",
+    "detail.context":"How this map came to be made","detail.context-eye":"Historical context",
+    "detail.reveals":"What the map reveals","detail.reveals-eye":"Reading the map",
+    "detail.significance":"Significance","detail.significance-eye":"Why it matters",
+    "detail.meaning":"Political, cultural, or scientific stakes","detail.meaning-eye":"Meaning",
+    "detail.biases":"What this map gets wrong, or leaves out","detail.biases-eye":"Distortions & limitations",
+    "detail.teaching-eye":"For the classroom","detail.teaching":"Discussion questions & activity",
+    "detail.activity":"Classroom activity","detail.teaching-note":"Designed for high-school / early-university level. History and critical-thinking emphasis. Adapt freely.",
     "detail.save":"Save to library","detail.saved":"Saved","detail.compare":"Compare",
     "detail.fullscreen":"Open full screen","detail.note":"Add note","detail.source.btn":"View source",
     "skip.main":"Skip to main content","footer.tagline":"An independent, educational project.",
@@ -85,9 +90,14 @@ const LANG = {
     "detail.century":"Siglo","detail.era":"Era","detail.country":"País / Área",
     "detail.continent":"Continente","detail.maptype":"Tipo de mapa","detail.language":"Idioma",
     "detail.category":"Categoría","detail.source":"Fuente","detail.license":"Licencia","detail.status":"Estado",
-    "detail.shows":"Qué muestra","detail.context":"Cómo se hizo este mapa",
-    "detail.reveals":"Qué revela el mapa","detail.significance":"Importancia",
-    "detail.meaning":"Significado político, cultural o científico","detail.biases":"Lo que este mapa distorsiona u omite",
+    "detail.shows":"Qué muestra","detail.shows-eye":"Sobre este mapa",
+    "detail.context":"Cómo se hizo este mapa","detail.context-eye":"Contexto histórico",
+    "detail.reveals":"Qué revela el mapa","detail.reveals-eye":"Leer el mapa",
+    "detail.significance":"Importancia","detail.significance-eye":"Por qué importa",
+    "detail.meaning":"Significado político, cultural o científico","detail.meaning-eye":"Significado",
+    "detail.biases":"Lo que este mapa distorsiona u omite","detail.biases-eye":"Distorsiones y limitaciones",
+    "detail.teaching-eye":"Para el aula","detail.teaching":"Preguntas de discusión y actividad",
+    "detail.activity":"Actividad de aula","detail.teaching-note":"Diseñado para nivel bachillerato / inicio de universidad. Énfasis en historia y pensamiento crítico. Adáptalo libremente.",
     "detail.save":"Guardar en la biblioteca","detail.saved":"Guardado","detail.compare":"Comparar",
     "detail.fullscreen":"Pantalla completa","detail.note":"Añadir nota","detail.source.btn":"Ver fuente",
     "skip.main":"Saltar al contenido principal","footer.tagline":"Un proyecto independiente y educativo.",
@@ -117,6 +127,18 @@ function t(key) {
   const loc = currentLocale();
   return (LANG[loc] && LANG[loc][key]) || LANG.en[key] || key;
 }
+// Pick a localized field from an object: prefer `field_es` when locale is es, else `field`.
+// Used for everything where the content has an editorial translation (curated essays, category
+// metadata, timeline blurbs, glossary entries, sequences, articles, etc.).
+function loc(obj, field) {
+  if (!obj) return "";
+  const lang = currentLocale();
+  if (lang !== "en") {
+    const localized = obj[field + "_" + lang];
+    if (localized != null && localized !== "") return localized;
+  }
+  return obj[field] || "";
+}
 // Apply translations to any element with a data-i18n="key" attribute,
 // or data-i18n-placeholder for inputs, or data-i18n-title for tooltips
 function applyStaticI18n() {
@@ -128,6 +150,11 @@ function applyStaticI18n() {
   });
   document.querySelectorAll("[data-i18n-title]").forEach(el => {
     el.title = t(el.dataset.i18nTitle);
+  });
+  // Show/hide language-specific blocks (the About page uses this pattern for long-form text)
+  const lang = currentLocale();
+  document.querySelectorAll("[data-lang]").forEach(el => {
+    el.hidden = el.dataset.lang !== lang;
   });
 }
 
@@ -166,36 +193,84 @@ function rotationFor(m) { return ROTATION_OVERRIDES[m.id] || 0; }
 
 /* ---------- 16 category metadata + essays ---------- */
 const CATEGORY_META = [
-  { key:"01_World_Maps",                    display:"World Maps",                subtitle:"The world as a whole.",                 description:"Every attempt to draw the entire planet is also an argument for one way of looking at it — from Ptolemy's coordinate world to the Apollo-era blue marble." },
-  { key:"02_Ancient_Maps",                  display:"Ancient Maps",              subtitle:"Before 500 BCE.",                       description:"Mesopotamian clay tablets, Egyptian survey papyri, the earliest known schematic representations of land and sky." },
-  { key:"03_Medieval_Maps",                 display:"Medieval Maps",             subtitle:"500 – 1450.",                           description:"Christian mappae mundi, Islamic geographies, Chinese maritime atlases — three traditions that rarely consult one another." },
-  { key:"04_Renaissance_Maps",              display:"Renaissance Maps",          subtitle:"1450 – 1650.",                          description:"Print, perspective, and the rediscovery of Ptolemy. European cartography reorganizes itself around mathematics — and makes errors at scale." },
-  { key:"05_Exploration_and_Navigation",    display:"Exploration & Navigation",  subtitle:"The age of sail.",                      description:"Charts that guided sailors across unfamiliar oceans: rhumb lines, magnetic declinations, the slow accumulation of coastlines." },
-  { key:"06_Colonial_Maps",                 display:"Colonial Maps",             subtitle:"Maps as instruments of empire.",        description:"The colonial cadastre is one of the most consequential cartographic objects ever made — a paper instrument for dispossession that outlived the empires that drew it." },
-  { key:"07_Empires_and_Borders",           display:"Empires & Borders",         subtitle:"Lines drawn far from the land.",        description:"From Roman provincial divisions to the treaties of 1919, the visual grammar of political authority across two thousand years." },
-  { key:"08_Country_and_Regional_Maps",     display:"Country & Regional Maps",   subtitle:"Closer than the world, larger than a city.", description:"Provincial atlases, regional surveys, national topographies — the middle scale at which most cartography happens." },
-  { key:"09_Climate_Maps",                  display:"Climate Maps",              subtitle:"Drawing what cannot be seen.",          description:"Köppen's classification, isotherm charts, satellite thermography. A history of how scientists learned to draw weather." },
-  { key:"10_Topographic_Maps",              display:"Topographic Maps",          subtitle:"The shape of land.",                    description:"Triangulation, plane-tabling, aerial photography, lidar. Topography is a story of measuring devices, not just of mountains." },
-  { key:"11_Geological_and_Scientific_Maps",display:"Geological & Scientific Maps",subtitle:"Layers beneath the surface.",         description:"Strata, fault lines, soils. The earth as a sequence of substances rather than a sequence of places." },
-  { key:"12_Nautical_Maps",                 display:"Nautical Maps",             subtitle:"Sea before land.",                      description:"Portolan charts, soundings, lighthouse atlases — the working documents of navigation, drawn with the open ocean as the central subject." },
-  { key:"13_Urban_Maps",                    display:"Urban Maps",                subtitle:"Cities drawing themselves.",            description:"Plans, panoramas, and bird's-eye views — how cities have represented themselves, and how those representations shaped what was built next." },
-  { key:"14_Indigenous_Cartographies",      display:"Indigenous Cartographies",  subtitle:"Pluriversal mapping.",                  description:"Songlines, wampum belts, Mexica land registers, modern counter-mapping projects — cartographic traditions the colonial archive has long misunderstood." },
-  { key:"15_Artistic_and_Imaginary_Maps",   display:"Artistic & Imaginary Maps", subtitle:"Maps of nowhere.",                      description:"The compass rose, the scale bar, the frame — cartographic conventions are persuasive even when the territory is invented." },
-  { key:"16_Modern_Reference_Maps",         display:"Modern Reference Maps",     subtitle:"After 1989.",                           description:"Digital cartography, OpenStreetMap, satellite mosaics, climate-change visualisation. Maps are no longer rare objects." },
+  { key:"01_World_Maps",                    display:"World Maps",                display_es:"Mapas del mundo",
+    subtitle:"The world as a whole.",       subtitle_es:"El mundo entero.",
+    description:"Every attempt to draw the entire planet is also an argument for one way of looking at it — from Ptolemy's coordinate world to the Apollo-era blue marble.",
+    description_es:"Cada intento de dibujar el planeta entero es también una argumentación a favor de una forma de mirarlo — desde el mundo coordenado de Ptolomeo hasta la canica azul de la era Apolo." },
+  { key:"02_Ancient_Maps",                  display:"Ancient Maps",              display_es:"Mapas antiguos",
+    subtitle:"Before 500 BCE.",             subtitle_es:"Antes del 500 a.C.",
+    description:"Mesopotamian clay tablets, Egyptian survey papyri, the earliest known schematic representations of land and sky.",
+    description_es:"Tablillas mesopotámicas de arcilla, papiros egipcios de mensura, las representaciones esquemáticas más antiguas de la tierra y el cielo que conocemos." },
+  { key:"03_Medieval_Maps",                 display:"Medieval Maps",             display_es:"Mapas medievales",
+    subtitle:"500 – 1450.",                 subtitle_es:"500 – 1450.",
+    description:"Christian mappae mundi, Islamic geographies, Chinese maritime atlases — three traditions that rarely consult one another.",
+    description_es:"Mappae mundi cristianas, geografías islámicas, atlas marítimos chinos — tres tradiciones que rara vez se consultaban entre sí." },
+  { key:"04_Renaissance_Maps",              display:"Renaissance Maps",          display_es:"Mapas renacentistas",
+    subtitle:"1450 – 1650.",                subtitle_es:"1450 – 1650.",
+    description:"Print, perspective, and the rediscovery of Ptolemy. European cartography reorganizes itself around mathematics — and makes errors at scale.",
+    description_es:"La imprenta, la perspectiva y el redescubrimiento de Ptolomeo. La cartografía europea se reorganiza alrededor de las matemáticas — y comete errores a gran escala." },
+  { key:"05_Exploration_and_Navigation",    display:"Exploration & Navigation",  display_es:"Exploración y navegación",
+    subtitle:"The age of sail.",            subtitle_es:"La era de la vela.",
+    description:"Charts that guided sailors across unfamiliar oceans: rhumb lines, magnetic declinations, the slow accumulation of coastlines.",
+    description_es:"Cartas que guiaron a los marinos por océanos desconocidos: líneas de rumbo, declinaciones magnéticas, la lenta acumulación de litorales." },
+  { key:"06_Colonial_Maps",                 display:"Colonial Maps",             display_es:"Mapas coloniales",
+    subtitle:"Maps as instruments of empire.", subtitle_es:"El mapa como instrumento del imperio.",
+    description:"The colonial cadastre is one of the most consequential cartographic objects ever made — a paper instrument for dispossession that outlived the empires that drew it.",
+    description_es:"El catastro colonial es uno de los objetos cartográficos más consecuentes de la historia — un instrumento de papel para el despojo que sobrevivió a los imperios que lo dibujaron." },
+  { key:"07_Empires_and_Borders",           display:"Empires & Borders",         display_es:"Imperios y fronteras",
+    subtitle:"Lines drawn far from the land.", subtitle_es:"Líneas trazadas lejos de la tierra.",
+    description:"From Roman provincial divisions to the treaties of 1919, the visual grammar of political authority across two thousand years.",
+    description_es:"De las divisiones provinciales romanas a los tratados de 1919, la gramática visual de la autoridad política a lo largo de dos mil años." },
+  { key:"08_Country_and_Regional_Maps",     display:"Country & Regional Maps",   display_es:"Mapas regionales y de países",
+    subtitle:"Closer than the world, larger than a city.", subtitle_es:"Más cerca que el mundo, más amplio que una ciudad.",
+    description:"Provincial atlases, regional surveys, national topographies — the middle scale at which most cartography happens.",
+    description_es:"Atlas provinciales, levantamientos regionales, topografías nacionales — la escala intermedia en la que ocurre la mayor parte de la cartografía." },
+  { key:"09_Climate_Maps",                  display:"Climate Maps",              display_es:"Mapas climáticos",
+    subtitle:"Drawing what cannot be seen.", subtitle_es:"Dibujar lo que no se ve.",
+    description:"Köppen's classification, isotherm charts, satellite thermography. A history of how scientists learned to draw weather.",
+    description_es:"La clasificación de Köppen, las cartas de isotermas, la termografía satelital. Una historia de cómo los científicos aprendieron a dibujar el clima." },
+  { key:"10_Topographic_Maps",              display:"Topographic Maps",          display_es:"Mapas topográficos",
+    subtitle:"The shape of land.",          subtitle_es:"La forma de la tierra.",
+    description:"Triangulation, plane-tabling, aerial photography, lidar. Topography is a story of measuring devices, not just of mountains.",
+    description_es:"Triangulación, plancheta, fotografía aérea, lidar. La topografía es una historia de instrumentos de medición, no solo de montañas." },
+  { key:"11_Geological_and_Scientific_Maps",display:"Geological & Scientific Maps", display_es:"Mapas geológicos y científicos",
+    subtitle:"Layers beneath the surface.", subtitle_es:"Estratos bajo la superficie.",
+    description:"Strata, fault lines, soils. The earth as a sequence of substances rather than a sequence of places.",
+    description_es:"Estratos, líneas de falla, suelos. La Tierra como una secuencia de materiales más que de lugares." },
+  { key:"12_Nautical_Maps",                 display:"Nautical Maps",             display_es:"Cartas náuticas",
+    subtitle:"Sea before land.",            subtitle_es:"Primero el mar, después la tierra.",
+    description:"Portolan charts, soundings, lighthouse atlases — the working documents of navigation, drawn with the open ocean as the central subject.",
+    description_es:"Cartas portulanas, sondeos, atlas de faros — los documentos de trabajo de la navegación, dibujados con el océano abierto como tema central." },
+  { key:"13_Urban_Maps",                    display:"Urban Maps",                display_es:"Mapas urbanos",
+    subtitle:"Cities drawing themselves.",  subtitle_es:"Las ciudades dibujándose a sí mismas.",
+    description:"Plans, panoramas, and bird's-eye views — how cities have represented themselves, and how those representations shaped what was built next.",
+    description_es:"Planos, panoramas y vistas de pájaro — cómo las ciudades se han representado a sí mismas, y cómo esas representaciones moldearon lo que se construyó después." },
+  { key:"14_Indigenous_Cartographies",      display:"Indigenous Cartographies",  display_es:"Cartografías indígenas",
+    subtitle:"Pluriversal mapping.",        subtitle_es:"Cartografía pluriversal.",
+    description:"Songlines, wampum belts, Mexica land registers, modern counter-mapping projects — cartographic traditions the colonial archive has long misunderstood.",
+    description_es:"Songlines, cinturones wampum, registros de tierras mexicas, proyectos modernos de contracartografía — tradiciones cartográficas que el archivo colonial ha malinterpretado por mucho tiempo." },
+  { key:"15_Artistic_and_Imaginary_Maps",   display:"Artistic & Imaginary Maps", display_es:"Mapas artísticos e imaginarios",
+    subtitle:"Maps of nowhere.",            subtitle_es:"Mapas de ningún lugar.",
+    description:"The compass rose, the scale bar, the frame — cartographic conventions are persuasive even when the territory is invented.",
+    description_es:"La rosa de los vientos, la barra de escala, el marco — las convenciones cartográficas resultan persuasivas incluso cuando el territorio es inventado." },
+  { key:"16_Modern_Reference_Maps",         display:"Modern Reference Maps",     display_es:"Mapas de referencia modernos",
+    subtitle:"After 1989.",                 subtitle_es:"Después de 1989.",
+    description:"Digital cartography, OpenStreetMap, satellite mosaics, climate-change visualisation. Maps are no longer rare objects.",
+    description_es:"Cartografía digital, OpenStreetMap, mosaicos satelitales, visualizaciones del cambio climático. Los mapas dejaron de ser objetos raros." },
 ];
 
 /* ---------- 11 historical eras (covers both dated + century-tagged maps) ---------- */
 const ERAS = [
-  { key:"ancient",        label:"Ancient civilizations",  range:"before 500 BCE",     yearFrom:-9999, yearTo:-500,   centuries:["Pre-history"] },
-  { key:"classical",      label:"Classical Antiquity",    range:"500 BCE – 500 CE",   yearFrom:-500,  yearTo:500,    centuries:["1st century","2nd century","3rd century","4th century","5th century"] },
-  { key:"medieval",       label:"Medieval period",        range:"500 – 1450",         yearFrom:500,   yearTo:1450,   centuries:["6th century","7th century","8th century","9th century","10th century","11th century","12th century","13th century","14th century","15th century"] },
-  { key:"renaissance",    label:"Renaissance & Exploration",range:"1450 – 1650",      yearFrom:1450,  yearTo:1650,   centuries:["15th century","16th century","17th century"] },
-  { key:"colonial",       label:"Colonial era",           range:"1650 – 1830",        yearFrom:1650,  yearTo:1830,   centuries:["17th century","18th century","19th century"] },
-  { key:"industrial",     label:"Industrial era",         range:"1830 – 1914",        yearFrom:1830,  yearTo:1914,   centuries:["19th century","20th century"] },
-  { key:"world-wars",     label:"World Wars",             range:"1914 – 1945",        yearFrom:1914,  yearTo:1945,   centuries:["20th century"] },
-  { key:"cold-war",       label:"Cold War",               range:"1945 – 1989",        yearFrom:1945,  yearTo:1989,   centuries:["20th century"] },
-  { key:"contemporary",   label:"Contemporary world",     range:"after 1989",         yearFrom:1989,  yearTo:9999,   centuries:["20th century","21st century"] },
-  { key:"undated",        label:"Undated",                range:"date uncertain",     yearFrom:null,  yearTo:null,   centuries:["Undated"] },
+  { key:"ancient",        label:"Ancient civilizations",  label_es:"Civilizaciones antiguas",  range:"before 500 BCE",     range_es:"antes del 500 a.C.",   yearFrom:-9999, yearTo:-500,   centuries:["Pre-history"] },
+  { key:"classical",      label:"Classical Antiquity",    label_es:"Antigüedad clásica",       range:"500 BCE – 500 CE",   range_es:"500 a.C. – 500 d.C.",  yearFrom:-500,  yearTo:500,    centuries:["1st century","2nd century","3rd century","4th century","5th century"] },
+  { key:"medieval",       label:"Medieval period",        label_es:"Período medieval",         range:"500 – 1450",         range_es:"500 – 1450",           yearFrom:500,   yearTo:1450,   centuries:["6th century","7th century","8th century","9th century","10th century","11th century","12th century","13th century","14th century","15th century"] },
+  { key:"renaissance",    label:"Renaissance & Exploration", label_es:"Renacimiento y exploración", range:"1450 – 1650",   range_es:"1450 – 1650",          yearFrom:1450,  yearTo:1650,   centuries:["15th century","16th century","17th century"] },
+  { key:"colonial",       label:"Colonial era",           label_es:"Era colonial",             range:"1650 – 1830",        range_es:"1650 – 1830",          yearFrom:1650,  yearTo:1830,   centuries:["17th century","18th century","19th century"] },
+  { key:"industrial",     label:"Industrial era",         label_es:"Era industrial",           range:"1830 – 1914",        range_es:"1830 – 1914",          yearFrom:1830,  yearTo:1914,   centuries:["19th century","20th century"] },
+  { key:"world-wars",     label:"World Wars",             label_es:"Guerras mundiales",        range:"1914 – 1945",        range_es:"1914 – 1945",          yearFrom:1914,  yearTo:1945,   centuries:["20th century"] },
+  { key:"cold-war",       label:"Cold War",               label_es:"Guerra Fría",              range:"1945 – 1989",        range_es:"1945 – 1989",          yearFrom:1945,  yearTo:1989,   centuries:["20th century"] },
+  { key:"contemporary",   label:"Contemporary world",     label_es:"Mundo contemporáneo",      range:"after 1989",         range_es:"después de 1989",      yearFrom:1989,  yearTo:9999,   centuries:["20th century","21st century"] },
+  { key:"undated",        label:"Undated",                label_es:"Sin fecha",                range:"date uncertain",     range_es:"fecha incierta",       yearFrom:null,  yearTo:null,   centuries:["Undated"] },
 ];
 
 function eraOfMap(m) {
@@ -283,7 +358,11 @@ function escapeHtml(s) {
 function shortTitle(t, max = 80) { return t && t.length > max ? t.slice(0, max-1).trim() + "…" : (t || "Untitled"); }
 function shortText(t, max = 180) { return t && t.length > max ? t.slice(0, max-1).trim() + "…" : t || ""; }
 function categoryMeta(key) { return CATEGORY_META.find(c => c.key === key); }
-function categoryDisplay(key) { return categoryMeta(key)?.display || (key||"").replace(/^\d+_/, '').replace(/_/g,' ').replace(/and/g, '&'); }
+function categoryDisplay(key) {
+  const meta = categoryMeta(key);
+  if (meta) return loc(meta, "display");
+  return (key || "").replace(/^\d+_/, '').replace(/_/g, ' ').replace(/and/g, '&');
+}
 
 function imageEl(m, opts = {}) {
   const lazy = opts.eager ? "" : 'loading="lazy"';
@@ -603,8 +682,8 @@ function renderHome() {
       <div class="map-frame map-frame-img" style="aspect-ratio: 5/3">${cover ? imageEl(cover) : ''}</div>
       <div class="collection-body">
         <span class="meta">${fmt(c.count)} maps · ${c.subtitle}</span>
-        <h3>${c.display}</h3>
-        <p>${c.description}</p>
+        <h3>${loc(c, "display")}</h3>
+        <p>${loc(c, "description")}</p>
       </div>
     </a>`;
   }).join("");
@@ -614,7 +693,7 @@ function renderHome() {
   $("#home-category-strip").innerHTML = sorted.map((c, i) => `
     <a class="category" href="#/archive/${c.key}">
       <span class="category-num">${String(i+1).padStart(2,'0')}</span>
-      <span class="category-name">${c.display}</span>
+      <span class="category-name">${loc(c, "display")}</span>
       <span class="category-count">${fmt(c.count)} map${c.count===1?"":"s"} · ${c.subtitle}</span>
     </a>`).join("");
 
@@ -715,7 +794,7 @@ function renderCategoryGrid(root) {
         <span class="eyebrow">Browse by era</span>
         <div class="era-pills">
           ${ERAS.map(e => `<a class="era-pill" data-era="${e.key}" href="#/archive">
-            <span class="era-pill-label">${e.label}</span>
+            <span class="era-pill-label">${loc(e, "label")}</span>
             <span class="era-pill-count">${fmt(COUNTS.byEra[e.key]||0)}</span>
           </a>`).join("")}
         </div>
@@ -751,10 +830,10 @@ function renderCategoryGrid(root) {
                 <span class="dot"></span>
                 <span class="meta">${fmt(count)} map${count===1?"":"s"}</span>
               </div>
-              <h3>${c.display}</h3>
-              <p class="cat-card-sub">${c.subtitle}</p>
-              <p class="cat-card-desc">${c.description}</p>
-              <span class="cat-card-cta">Browse ${c.display.toLowerCase()} ${icons.arrow}</span>
+              <h3>${loc(c, "display")}</h3>
+              <p class="cat-card-sub">${loc(c, "subtitle")}</p>
+              <p class="cat-card-desc">${loc(c, "description")}</p>
+              <span class="cat-card-cta">Browse ${loc(c, "display").toLowerCase()} ${icons.arrow}</span>
             </div>
           </a>`;
         }).join("")}
@@ -870,7 +949,7 @@ function renderCategoryDetail(root, catKey) {
                 const c = all.filter(m => MAP_ERA[m.id] === e.key).length;
                 return `<label class="era-radio">
                   <input type="radio" name="era" value="${e.key}" ${archiveState.era === e.key ? 'checked' : ''}/>
-                  <span>${e.label} <em>(${fmt(c)})</em></span>
+                  <span>${loc(e, "label")} <em>(${fmt(c)})</em></span>
                 </label>`;
               }).join("")}
             </div>
@@ -1297,47 +1376,47 @@ function renderMapDetail(id) {
 
       <div class="detail-essays">
         ${m.description ? `<section>
-          <span class="eyebrow">About this map</span>
-          <h3>What it shows</h3>
-          <p>${m.description}</p>
+          <span class="eyebrow">${t("detail.shows-eye") || "About this map"}</span>
+          <h3>${t("detail.shows")}</h3>
+          <p>${loc(m, "description")}</p>
         </section>` : ''}
         ${m.historical_context ? `<section>
-          <span class="eyebrow">Historical context</span>
-          <h3>How this map came to be made</h3>
-          <p>${m.historical_context}</p>
+          <span class="eyebrow">${t("detail.context-eye") || "Historical context"}</span>
+          <h3>${t("detail.context")}</h3>
+          <p>${loc(m, "historical_context")}</p>
         </section>` : ''}
         ${m.interpretation ? `<section>
-          <span class="eyebrow">Reading the map</span>
-          <h3>What the map reveals</h3>
-          <p>${m.interpretation}</p>
+          <span class="eyebrow">${t("detail.reveals-eye") || "Reading the map"}</span>
+          <h3>${t("detail.reveals")}</h3>
+          <p>${loc(m, "interpretation")}</p>
         </section>` : ''}
         ${m.significance ? `<section>
-          <span class="eyebrow">Why it matters</span>
-          <h3>Significance</h3>
-          <p>${m.significance}</p>
+          <span class="eyebrow">${t("detail.significance-eye") || "Why it matters"}</span>
+          <h3>${t("detail.significance")}</h3>
+          <p>${loc(m, "significance")}</p>
         </section>` : ''}
         ${m.meaning ? `<section>
-          <span class="eyebrow">Meaning</span>
-          <h3>Political, cultural, or scientific stakes</h3>
-          <p>${m.meaning}</p>
+          <span class="eyebrow">${t("detail.meaning-eye") || "Meaning"}</span>
+          <h3>${t("detail.meaning")}</h3>
+          <p>${loc(m, "meaning")}</p>
         </section>` : ''}
         ${m.biases ? `<section class="detail-bias">
-          <span class="eyebrow" style="color:var(--terracotta)">Distortions &amp; limitations</span>
-          <h3 style="margin-top:8px">What this map gets wrong, or leaves out</h3>
-          <p style="margin-top:10px">${m.biases}</p>
+          <span class="eyebrow" style="color:var(--terracotta)">${t("detail.biases-eye") || "Distortions & limitations"}</span>
+          <h3 style="margin-top:8px">${t("detail.biases")}</h3>
+          <p style="margin-top:10px">${loc(m, "biases")}</p>
         </section>` : ''}
         ${m.teachingNotes ? `<section class="detail-teaching">
-          <span class="eyebrow" style="color:var(--green)">For the classroom</span>
-          <h3 style="margin-top:8px">Discussion questions &amp; activity</h3>
+          <span class="eyebrow" style="color:var(--green)">${t("detail.teaching-eye")}</span>
+          <h3 style="margin-top:8px">${t("detail.teaching")}</h3>
           <ol class="teaching-questions">
-            ${m.teachingNotes.questions.map(q => `<li>${escapeHtml(q)}</li>`).join("")}
+            ${(loc(m.teachingNotes, "questions") || m.teachingNotes.questions || []).map(q => `<li>${escapeHtml(q)}</li>`).join("")}
           </ol>
           <div class="teaching-activity">
-            <span class="meta">Classroom activity</span>
-            <p>${escapeHtml(m.teachingNotes.activity)}</p>
+            <span class="meta">${t("detail.activity")}</span>
+            <p>${escapeHtml(loc(m.teachingNotes, "activity"))}</p>
           </div>
           <p class="meta" style="margin-top:14px; text-transform:none; letter-spacing:0; font-family:var(--serif-body); font-size:12px; color:var(--ink-muted); font-style:italic">
-            Designed for high-school / early-university level. History and critical-thinking emphasis. Adapt freely.
+            ${t("detail.teaching-note")}
           </p>
         </section>` : ''}
         ${(m.tags && m.tags.length) ? `<section>
@@ -1686,15 +1765,51 @@ function bindZoomModal() {
 
 /* ============ TIMELINE ============ */
 const TIMELINE_PERIODS = [
-  { id:"ancient", name:"Ancient civilizations", range:"before 500 BCE", blurb:"Mesopotamian clay tablets, Egyptian survey papyri, the earliest schematic representations of land and sky.", eraKey:"ancient" },
-  { id:"classical", name:"Classical Antiquity", range:"500 BCE – 500 CE", blurb:"Greco-Roman geography emerges as a mathematical discipline. Ptolemy's coordinates outlast every empire that drew them.", eraKey:"classical" },
-  { id:"medieval", name:"Medieval period", range:"500 – 1450", blurb:"Christian mappae mundi, Islamic geographies, Chinese maritime atlases — three traditions that rarely consult one another.", eraKey:"medieval" },
-  { id:"renaissance", name:"Renaissance & Exploration", range:"1450 – 1650", blurb:"Print, gunpowder, and the caravel. European maps cease to be objects of theology and become instruments of expansion.", eraKey:"renaissance" },
-  { id:"colonial", name:"Colonial empires", range:"1650 – 1830", blurb:"Cadastral surveys, treaty maps, the Mercator projection as imperial infrastructure. Borders are drawn far from the land they divide.", eraKey:"colonial" },
-  { id:"industrial", name:"Industrial era", range:"1830 – 1914", blurb:"Topographic survey matures. Maps become products of mass print: railway atlases, climate classifications, weather maps.", eraKey:"industrial" },
-  { id:"world-wars", name:"World Wars", range:"1914 – 1945", blurb:"Aerial photography rewrites what 'survey' means. Trench maps, propaganda maps, the first global air-route diagrams.", eraKey:"world-wars" },
-  { id:"cold-war", name:"Cold War", range:"1945 – 1989", blurb:"Two-bloc cartography, the rise of satellite remote sensing, decolonization redrawing half the political map of Earth.", eraKey:"cold-war" },
-  { id:"contemporary", name:"Contemporary world", range:"after 1989", blurb:"Digital cartography, OpenStreetMap, indigenous counter-mapping, climate-change visualisation. Maps are no longer rare objects.", eraKey:"contemporary" },
+  { id:"ancient", eraKey:"ancient",
+    name:"Ancient civilizations", name_es:"Civilizaciones antiguas",
+    range:"before 500 BCE", range_es:"antes del 500 a.C.",
+    blurb:"Mesopotamian clay tablets, Egyptian survey papyri, the earliest schematic representations of land and sky.",
+    blurb_es:"Tablillas mesopotámicas de arcilla, papiros egipcios de mensura, las representaciones esquemáticas más antiguas de la tierra y el cielo." },
+  { id:"classical", eraKey:"classical",
+    name:"Classical Antiquity", name_es:"Antigüedad clásica",
+    range:"500 BCE – 500 CE", range_es:"500 a.C. – 500 d.C.",
+    blurb:"Greco-Roman geography emerges as a mathematical discipline. Ptolemy's coordinates outlast every empire that drew them.",
+    blurb_es:"La geografía grecorromana surge como disciplina matemática. Las coordenadas de Ptolomeo sobreviven a todos los imperios que las trazaron." },
+  { id:"medieval", eraKey:"medieval",
+    name:"Medieval period", name_es:"Período medieval",
+    range:"500 – 1450", range_es:"500 – 1450",
+    blurb:"Christian mappae mundi, Islamic geographies, Chinese maritime atlases — three traditions that rarely consult one another.",
+    blurb_es:"Mappae mundi cristianas, geografías islámicas, atlas marítimos chinos — tres tradiciones que rara vez se consultaban entre sí." },
+  { id:"renaissance", eraKey:"renaissance",
+    name:"Renaissance & Exploration", name_es:"Renacimiento y exploración",
+    range:"1450 – 1650", range_es:"1450 – 1650",
+    blurb:"Print, gunpowder, and the caravel. European maps cease to be objects of theology and become instruments of expansion.",
+    blurb_es:"La imprenta, la pólvora y la carabela. Los mapas europeos dejan de ser objetos teológicos y se vuelven instrumentos de expansión." },
+  { id:"colonial", eraKey:"colonial",
+    name:"Colonial empires", name_es:"Imperios coloniales",
+    range:"1650 – 1830", range_es:"1650 – 1830",
+    blurb:"Cadastral surveys, treaty maps, the Mercator projection as imperial infrastructure. Borders are drawn far from the land they divide.",
+    blurb_es:"Levantamientos catastrales, mapas de tratados, la proyección de Mercator como infraestructura imperial. Las fronteras se trazan lejos de las tierras que dividen." },
+  { id:"industrial", eraKey:"industrial",
+    name:"Industrial era", name_es:"Era industrial",
+    range:"1830 – 1914", range_es:"1830 – 1914",
+    blurb:"Topographic survey matures. Maps become products of mass print: railway atlases, climate classifications, weather maps.",
+    blurb_es:"La topografía moderna madura. Los mapas se vuelven productos de la imprenta masiva: atlas ferroviarios, clasificaciones climáticas, mapas del tiempo." },
+  { id:"world-wars", eraKey:"world-wars",
+    name:"World Wars", name_es:"Guerras mundiales",
+    range:"1914 – 1945", range_es:"1914 – 1945",
+    blurb:"Aerial photography rewrites what 'survey' means. Trench maps, propaganda maps, the first global air-route diagrams.",
+    blurb_es:"La fotografía aérea redefine el significado de «levantamiento». Mapas de trincheras, mapas de propaganda, los primeros diagramas globales de rutas aéreas." },
+  { id:"cold-war", eraKey:"cold-war",
+    name:"Cold War", name_es:"Guerra Fría",
+    range:"1945 – 1989", range_es:"1945 – 1989",
+    blurb:"Two-bloc cartography, the rise of satellite remote sensing, decolonization redrawing half the political map of Earth.",
+    blurb_es:"Cartografía bipolar, el auge de la teledetección satelital, la descolonización redibujando la mitad del mapa político de la Tierra." },
+  { id:"contemporary", eraKey:"contemporary",
+    name:"Contemporary world", name_es:"Mundo contemporáneo",
+    range:"after 1989", range_es:"después de 1989",
+    blurb:"Digital cartography, OpenStreetMap, indigenous counter-mapping, climate-change visualisation. Maps are no longer rare objects.",
+    blurb_es:"Cartografía digital, OpenStreetMap, contracartografía indígena, visualización del cambio climático. Los mapas dejaron de ser objetos raros." },
 ];
 
 function renderTimeline() {
@@ -1720,9 +1835,9 @@ function renderTimeline() {
             <div class="period-line"></div>
           </div>
           <div class="period-content">
-            <span class="meta">${p.range} · ${fmt(p.inEra.length)} maps${p.curatedInEra.length ? ` · ${fmt(p.curatedInEra.length)} curated` : ''}</span>
-            <h2 style="margin-top:8px">${p.name}</h2>
-            <p class="lede" style="margin-top:18px">${p.blurb}</p>
+            <span class="meta">${loc(p, "range")} · ${fmt(p.inEra.length)} maps${p.curatedInEra.length ? ` · ${fmt(p.curatedInEra.length)} curated` : ''}</span>
+            <h2 style="margin-top:8px">${loc(p, "name")}</h2>
+            <p class="lede" style="margin-top:18px">${loc(p, "blurb")}</p>
             ${p.sample.length ? `
               <div class="period-thumbs">${p.sample.map(m => `
                 <a class="period-thumb${m.significance ? ' period-thumb-curated' : ''}" href="#/map/${m.id}" title="${escapeAttr(m.title)}">
@@ -1742,7 +1857,7 @@ function renderTimeline() {
     <div class="timeline-nav">
       <button class="icon-btn" data-tl-scroll="left" aria-label="Scroll earlier">←</button>
       <div class="timeline-dots">
-        ${periods.map((p, i) => `<button class="timeline-dot" data-jump="${i}" title="${p.name}"><span></span></button>`).join("")}
+        ${periods.map((p, i) => `<button class="timeline-dot" data-jump="${i}" title="${loc(p, "name")}"><span></span></button>`).join("")}
       </div>
       <button class="icon-btn" data-tl-scroll="right" aria-label="Scroll later">→</button>
     </div>
@@ -1829,7 +1944,7 @@ function renderCompare() {
         <div class="compare-preset-list">
           ${COMPARE_PRESETS.map((p, i) => `
             <button class="compare-preset-card" data-preset="${i}" title="${escapeAttr(p.note)}">
-              <span class="preset-name">${p.name}</span>
+              <span class="preset-name">${loc(p, "name")}</span>
               <span class="preset-arrow">→</span>
             </button>`).join("")}
         </div>
@@ -2150,17 +2265,50 @@ function audienceFor(m) {
 function renderCollections() {
   // Use the 11 collection definitions = different cuts of the archive
   const COLLECTION_DEFS = [
-    { cat: "07_Empires_and_Borders", title:"Maps of Empire", essay:"From the Tabula Peutingeriana to the imperial-red atlases of 1886, this collection traces cartography's long entanglement with conquest — and the visual conventions empires used to make extraction look like geography." },
-    { cat: "03_Medieval_Maps", title:"The World Before Modern Borders", essay:"What did the world look like when nation-states were not the default unit? Medieval mappae mundi, Islamic geographies, and pre-Westphalian European maps imagine territory in other ways entirely." },
-    { cat: "09_Climate_Maps", title:"Climate Through Cartography", essay:"Köppen's classification, isotherm charts, satellite thermography. A history of how scientists learned to draw what cannot be seen." },
-    { cat: "06_Colonial_Maps", title:"Maps and Colonialism", essay:"The colonial cadastre is one of the most consequential cartographic objects ever made — a paper instrument for dispossession that outlived the empires that drew it." },
-    { cat: "12_Nautical_Maps", title:"Charts of the Open Sea", essay:"Portolan charts, nautical surveys, container-shipping flow maps. The world drawn as a network of coasts, hazards, and exchange." },
-    { cat: "10_Topographic_Maps", title:"Topography and War", essay:"The trench map, the bombing-run map, the contour survey of a contested ridge. Topography is rarely a peaceful science." },
-    { cat: "14_Indigenous_Cartographies", title:"Indigenous Ways of Mapping Space", essay:"Songlines, wampum belts, Mexica land registers, modern counter-mapping projects — cartographic traditions that the colonial archive has long misunderstood." },
-    { cat: "15_Artistic_and_Imaginary_Maps", title:"Artistic and Imaginary Maps", essay:"Maps of nowhere, maps of fictional worlds, maps as paintings. A reminder that the visual conventions of cartography are persuasive even when the territory is invented." },
-    { cat: "13_Urban_Maps", title:"The Cities of the World", essay:"Plans, panoramas, and bird's-eye views — how cities have drawn themselves across centuries, and how those drawings shaped what was built next." },
-    { cat: "01_World_Maps", title:"The World as a Whole", essay:"Every attempt to draw the entire planet is also an attempt to argue for one way of looking at it. The history of world maps is a history of those arguments." },
-    { cat: "04_Renaissance_Maps", title:"The Renaissance Atlas", essay:"Print, perspective, and the rediscovery of Ptolemy. A century when European cartography reorganised itself around mathematics — and made errors at scale." },
+    { cat: "07_Empires_and_Borders",
+      title:"Maps of Empire", title_es:"Mapas del imperio",
+      essay:"From the Tabula Peutingeriana to the imperial-red atlases of 1886, this collection traces cartography's long entanglement with conquest — and the visual conventions empires used to make extraction look like geography.",
+      essay_es:"Desde la Tabula Peutingeriana hasta los atlas rojo imperial de 1886, esta colección recorre el largo enredo de la cartografía con la conquista — y las convenciones visuales que los imperios usaron para que la extracción pareciera geografía." },
+    { cat: "03_Medieval_Maps",
+      title:"The World Before Modern Borders", title_es:"El mundo antes de las fronteras modernas",
+      essay:"What did the world look like when nation-states were not the default unit? Medieval mappae mundi, Islamic geographies, and pre-Westphalian European maps imagine territory in other ways entirely.",
+      essay_es:"¿Qué aspecto tenía el mundo cuando el Estado-nación no era la unidad por defecto? Las mappae mundi medievales, las geografías islámicas y los mapas europeos pre-westfalianos imaginan el territorio de otras maneras enteramente distintas." },
+    { cat: "09_Climate_Maps",
+      title:"Climate Through Cartography", title_es:"El clima a través de la cartografía",
+      essay:"Köppen's classification, isotherm charts, satellite thermography. A history of how scientists learned to draw what cannot be seen.",
+      essay_es:"La clasificación de Köppen, las cartas de isotermas, la termografía satelital. Una historia de cómo los científicos aprendieron a dibujar lo que no se ve." },
+    { cat: "06_Colonial_Maps",
+      title:"Maps and Colonialism", title_es:"Mapas y colonialismo",
+      essay:"The colonial cadastre is one of the most consequential cartographic objects ever made — a paper instrument for dispossession that outlived the empires that drew it.",
+      essay_es:"El catastro colonial es uno de los objetos cartográficos más consecuentes de la historia — un instrumento de papel para el despojo que sobrevivió a los imperios que lo dibujaron." },
+    { cat: "12_Nautical_Maps",
+      title:"Charts of the Open Sea", title_es:"Cartas del mar abierto",
+      essay:"Portolan charts, nautical surveys, container-shipping flow maps. The world drawn as a network of coasts, hazards, and exchange.",
+      essay_es:"Cartas portulanas, levantamientos náuticos, mapas de flujo de los portacontenedores. El mundo dibujado como una red de costas, peligros e intercambios." },
+    { cat: "10_Topographic_Maps",
+      title:"Topography and War", title_es:"Topografía y guerra",
+      essay:"The trench map, the bombing-run map, the contour survey of a contested ridge. Topography is rarely a peaceful science.",
+      essay_es:"El mapa de trincheras, el mapa de bombardeo, el levantamiento por curvas de nivel de un cerro disputado. La topografía rara vez es una ciencia pacífica." },
+    { cat: "14_Indigenous_Cartographies",
+      title:"Indigenous Ways of Mapping Space", title_es:"Modos indígenas de cartografiar el espacio",
+      essay:"Songlines, wampum belts, Mexica land registers, modern counter-mapping projects — cartographic traditions that the colonial archive has long misunderstood.",
+      essay_es:"Songlines, cinturones wampum, registros de tierras mexicas, proyectos modernos de contracartografía — tradiciones cartográficas que el archivo colonial ha malinterpretado durante mucho tiempo." },
+    { cat: "15_Artistic_and_Imaginary_Maps",
+      title:"Artistic and Imaginary Maps", title_es:"Mapas artísticos e imaginarios",
+      essay:"Maps of nowhere, maps of fictional worlds, maps as paintings. A reminder that the visual conventions of cartography are persuasive even when the territory is invented.",
+      essay_es:"Mapas de ningún lugar, mapas de mundos ficticios, mapas como pinturas. Un recordatorio de que las convenciones visuales de la cartografía resultan persuasivas incluso cuando el territorio es inventado." },
+    { cat: "13_Urban_Maps",
+      title:"The Cities of the World", title_es:"Las ciudades del mundo",
+      essay:"Plans, panoramas, and bird's-eye views — how cities have drawn themselves across centuries, and how those drawings shaped what was built next.",
+      essay_es:"Planos, panoramas y vistas de pájaro — cómo las ciudades se han dibujado a sí mismas a lo largo de los siglos, y cómo esos dibujos moldearon lo que se construyó después." },
+    { cat: "01_World_Maps",
+      title:"The World as a Whole", title_es:"El mundo entero",
+      essay:"Every attempt to draw the entire planet is also an attempt to argue for one way of looking at it. The history of world maps is a history of those arguments.",
+      essay_es:"Cada intento de dibujar el planeta entero es también un intento de defender una manera de mirarlo. La historia de los mapamundis es la historia de esas defensas." },
+    { cat: "04_Renaissance_Maps",
+      title:"The Renaissance Atlas", title_es:"El atlas renacentista",
+      essay:"Print, perspective, and the rediscovery of Ptolemy. A century when European cartography reorganised itself around mathematics — and made errors at scale.",
+      essay_es:"La imprenta, la perspectiva y el redescubrimiento de Ptolomeo. Un siglo en que la cartografía europea se reorganizó alrededor de las matemáticas — y cometió errores a gran escala." },
   ];
   $("#collections-root").innerHTML = COLLECTION_DEFS.map(c => {
     const list = MAPS_BY_CATEGORY[c.cat] || [];
@@ -2173,8 +2321,8 @@ function renderCollections() {
           <span class="meta">${fmt(list.length)} maps</span><span class="dot"></span>
           <span class="meta">Curated essay</span>
         </div>
-        <h2 style="margin-top:14px">${c.title}</h2>
-        <p style="margin-top:18px; color:var(--ink-dim); font-size:17px; line-height:1.65">${c.essay}</p>
+        <h2 style="margin-top:14px">${loc(c, "title")}</h2>
+        <p style="margin-top:18px; color:var(--ink-dim); font-size:17px; line-height:1.65">${loc(c, "essay")}</p>
         <a class="btn btn-ghost" style="margin-top:22px; padding-left:0" href="#/archive/${c.cat}">Open collection ${icons.arrow}</a>
       </div>
     </article>
@@ -2184,18 +2332,84 @@ function renderCollections() {
 
 /* ============ LEARN ============ */
 const ARTICLES = [
-  { slug:"old-maps-not-inaccurate", title:"Why old maps are not just inaccurate versions of modern maps", status:"Full article", topic:"Foundations", style:"medieval", excerpt:"Treating Ptolemy as a failed Google Maps is the surest way to misread him. Old maps were answering different questions — and often answering them well." },
-  { slug:"maps-political-power", title:"How maps create political power", status:"Draft outline", topic:"Power", style:"imperial", excerpt:"A line on a map is rarely just descriptive. From the Treaty of Tordesillas onward, drawn boundaries have produced the very territories they claim to record." },
-  { slug:"empires-used-maps", title:"How empires used maps", status:"Draft outline", topic:"Empire", style:"colonial", excerpt:"Cadastral surveys, treaty atlases, railway concession maps. The infrastructure of empire was, in large part, made of paper." },
-  { slug:"climate-maps-science", title:"How climate maps changed science", status:"Draft outline", topic:"Science", style:"climate", excerpt:"Köppen's vegetation-derived climate classes were a quiet revolution: a way to make the atmosphere legible by treating plants as instruments." },
-  { slug:"topographic-history", title:"The history of topographic maps", status:"Draft outline", topic:"Method", style:"topo", excerpt:"Triangulation, plane-tabling, aerial photography, lidar. Topography is a story of measuring devices, not just of mountains." },
-  { slug:"artistic-imagined", title:"How artistic maps represent imagined worlds", status:"Draft outline", topic:"Imagination", style:"artistic", excerpt:"The compass rose, the scale bar, the frame — cartographic conventions are persuasive even when the territory is wholly invented." },
-  { slug:"silences-colonial-map", title:"Reading the silences in a colonial map", status:"Draft outline", topic:"Critique", style:"colonial", excerpt:"What a map omits is often a clearer political statement than what it includes. A short guide to reading the gaps." },
-  { slug:"indigenous-counter-mapping", title:"Indigenous counter-mapping in the 21st century", status:"Draft outline", topic:"Practice", style:"indigenous", excerpt:"How communities are using GIS, GPS, and oral history to remap territories that the colonial archive has long misrepresented." },
+  { slug:"old-maps-not-inaccurate", status:"Full article", status_es:"Artículo completo", topic:"Foundations", topic_es:"Fundamentos", style:"medieval",
+    title:"Why old maps are not just inaccurate versions of modern maps",
+    title_es:"Por qué los mapas antiguos no son simplemente versiones inexactas de los modernos",
+    excerpt:"Treating Ptolemy as a failed Google Maps is the surest way to misread him. Old maps were answering different questions — and often answering them well.",
+    excerpt_es:"Tratar a Ptolomeo como un Google Maps fallido es la mejor manera de leerlo mal. Los mapas antiguos respondían a otras preguntas — y muchas veces las respondían bien." },
+  { slug:"maps-political-power", status:"Draft outline", status_es:"Esquema en borrador", topic:"Power", topic_es:"Poder", style:"imperial",
+    title:"How maps create political power",
+    title_es:"Cómo los mapas producen poder político",
+    excerpt:"A line on a map is rarely just descriptive. From the Treaty of Tordesillas onward, drawn boundaries have produced the very territories they claim to record.",
+    excerpt_es:"Una línea en un mapa rara vez es solo descriptiva. Desde el Tratado de Tordesillas, las fronteras trazadas han producido los mismos territorios que pretenden registrar." },
+  { slug:"empires-used-maps", status:"Draft outline", status_es:"Esquema en borrador", topic:"Empire", topic_es:"Imperio", style:"colonial",
+    title:"How empires used maps",
+    title_es:"Cómo los imperios usaron los mapas",
+    excerpt:"Cadastral surveys, treaty atlases, railway concession maps. The infrastructure of empire was, in large part, made of paper.",
+    excerpt_es:"Catastros, atlas de tratados, mapas de concesiones ferroviarias. La infraestructura del imperio estaba hecha, en gran parte, de papel." },
+  { slug:"climate-maps-science", status:"Draft outline", status_es:"Esquema en borrador", topic:"Science", topic_es:"Ciencia", style:"climate",
+    title:"How climate maps changed science",
+    title_es:"Cómo los mapas climáticos cambiaron la ciencia",
+    excerpt:"Köppen's vegetation-derived climate classes were a quiet revolution: a way to make the atmosphere legible by treating plants as instruments.",
+    excerpt_es:"Las clases climáticas de Köppen, derivadas de la vegetación, fueron una revolución silenciosa: una forma de hacer legible la atmósfera tratando a las plantas como instrumentos de medición." },
+  { slug:"topographic-history", status:"Draft outline", status_es:"Esquema en borrador", topic:"Method", topic_es:"Método", style:"topo",
+    title:"The history of topographic maps",
+    title_es:"La historia de los mapas topográficos",
+    excerpt:"Triangulation, plane-tabling, aerial photography, lidar. Topography is a story of measuring devices, not just of mountains.",
+    excerpt_es:"Triangulación, plancheta, fotografía aérea, lidar. La topografía es una historia de instrumentos de medición, no solo de montañas." },
+  { slug:"artistic-imagined", status:"Draft outline", status_es:"Esquema en borrador", topic:"Imagination", topic_es:"Imaginación", style:"artistic",
+    title:"How artistic maps represent imagined worlds",
+    title_es:"Cómo los mapas artísticos representan mundos imaginados",
+    excerpt:"The compass rose, the scale bar, the frame — cartographic conventions are persuasive even when the territory is wholly invented.",
+    excerpt_es:"La rosa de los vientos, la barra de escala, el marco — las convenciones cartográficas resultan persuasivas incluso cuando el territorio es enteramente inventado." },
+  { slug:"silences-colonial-map", status:"Draft outline", status_es:"Esquema en borrador", topic:"Critique", topic_es:"Crítica", style:"colonial",
+    title:"Reading the silences in a colonial map",
+    title_es:"Leer los silencios en un mapa colonial",
+    excerpt:"What a map omits is often a clearer political statement than what it includes. A short guide to reading the gaps.",
+    excerpt_es:"Lo que un mapa omite suele ser una declaración política más clara que lo que incluye. Una guía breve para leer los vacíos." },
+  { slug:"indigenous-counter-mapping", status:"Draft outline", status_es:"Esquema en borrador", topic:"Practice", topic_es:"Práctica", style:"indigenous",
+    title:"Indigenous counter-mapping in the 21st century",
+    title_es:"Contracartografía indígena en el siglo XXI",
+    excerpt:"How communities are using GIS, GPS, and oral history to remap territories that the colonial archive has long misrepresented.",
+    excerpt_es:"Cómo las comunidades están usando SIG, GPS e historia oral para volver a mapear territorios que el archivo colonial lleva siglos tergiversando." },
 ];
 
-// Full text for articles marked status:"Full article".
+// Full text for articles marked status:"Full article". Keyed by slug; an "_es" suffix variant
+// holds the Spanish translation.
 const ARTICLE_BODIES = {
+"old-maps-not-inaccurate_es": `
+<p class="lede" style="margin-bottom:32px">Existe una manera familiar de mirar los mapas antiguos: uno señala los litorales deformes, los continentes faltantes, los monstruos de los márgenes, y comenta con cierta condescendencia lo poco que sabían quienes los hicieron. Es una lectura tentadora, y tiene la virtud de ser fácil. También es errónea.</p>
+
+<h2>La vara equivocada</h2>
+<p>Llamar «inexacto» a un mapamundi del siglo XII es asumir que su autor intentaba alcanzar la exactitud moderna y fracasó. Pero eso casi nunca era lo que estaba haciendo. La Mappa Mundi de Hereford, hecha hacia 1300 y conservada en la catedral del mismo nombre, sitúa a Jerusalén en el centro del mundo, con el oriente arriba, y puebla África con razas monstruosas copiadas de Plinio el Viejo. Leída como atlas vial, es inservible. Leída como enciclopedia visual de la cosmología cristiana medieval, es uno de los objetos más ambiciosos de su tiempo.</p>
+
+<p>Quienes hicieron el mapa de Hereford tenían acceso a cartas portulanas con litorales mediterráneos mejores. Decidieron no usarlas. El propósito de su mapa no era navegar el espacio sino argumentar un orden moral y teológico: la historia de la salvación en el centro, los continentes conocidos alrededor, el Edén en lo alto, los monstruos del mundo en los bordes. Esto no es cartografía fallida. Es otro proyecto cartográfico distinto.</p>
+
+<h2>Otras preguntas, otros mapas</h2>
+<p>La misma lógica se aplica a la mayoría de los mapas premodernos. La Tabula Peutingeriana — un pergamino de seis metros que muestra la red vial romana — comprime tanto el norte–sur que el Mediterráneo aparece como un canal angosto. El observador moderno se inquieta. Pero el propósito del mapa era planear un viaje por el <em>cursus publicus</em>, el sistema postal imperial, donde la pregunta relevante no era «¿qué forma tiene Italia?» sino «¿cuántos días hay desde Aquileia hasta Antioquía?». La forma era secundaria. El mapa era un documento de logística, optimizado para la pregunta que sus usuarios realmente tenían.</p>
+
+<p>La Tabula Rogeriana de al-Idrisi, hecha para Roger II de Sicilia en 1154, coloca el sur arriba — una convención tomada de la tradición geográfica islámica que desorienta al lector moderno pero no correspondía a ningún fracaso por parte de al-Idrisi. Su Mediterráneo es notablemente exacto. Su océano Índico es abierto al oriente, cincuenta años antes de que Marco Polo viajara y tres siglos antes de que Vasco da Gama lo demostrara. Leída como carta de navegación, es inutilizable. Leída como síntesis del conocimiento geográfico disponible para un polímata mediterráneo del siglo XII, supera todo lo que la cartografía europea produciría durante los tres siglos siguientes.</p>
+
+<h2>La exactitud es una categoría construida</h2>
+<p>Incluso los mapas «modernos» son exactos solo en las dimensiones que eligen optimizar. La proyección de Mercator, diseñada en 1569 para la navegación marítima, hace que las líneas de rumbo aparezcan rectas — una solución brillante al problema del marino de mantener un curso constante. Como efecto secundario, infla las latitudes polares de manera dramática. Groenlandia aparece del tamaño de África. No es que Mercator haya fracasado en geografía mundial; es que Mercator resolvió el problema del marino y aceptó el compromiso. Sería como criticar un mapa del metro por no preservar las distancias reales entre estaciones.</p>
+
+<p>Lo que el espectador moderno llama «exactitud» suele ser un compromiso específico: el datum WGS84, una proyección particular (a menudo derivada de Mercator), coordenadas satelitales, cuadrículas decimales. Son decisiones. Se tomaron para navegar, para hacer catastro, para administrar Estados. Privilegian ciertos usos — geolocalización, blancos militares, planeación de infraestructura — sobre otros. Un mapa de territorios indígenas, dibujado por cartógrafos indígenas, podría privilegiar la tradición oral, las rutas ancestrales, las zonas ecológicas; el resultado podría parecer «inexacto» según los estándares del SIG y ser, sin embargo, más exacto frente a la pregunta que se está haciendo.</p>
+
+<h2>Cómo leer bien un mapa antiguo</h2>
+<p>Si te encuentras frente a un mapa mundial ptolemaico, una mappa mundi medieval o una carta portulana, vale la pena sostener cuatro preguntas:</p>
+
+<ul style="line-height:1.7; padding-left:24px; margin-top:14px">
+  <li><strong>¿Qué pregunta intenta responder este mapa?</strong> «¿Dónde está el Edén?» es una pregunta perfectamente seria para un lector del siglo XIV. «¿Cuántos días hasta Antioquía?» es una pregunta logística. «¿Dónde fondeo el barco?» es una pregunta de marino. Cada una exige un mapa distinto.</li>
+  <li><strong>¿Qué convenciones usa?</strong> Sur arriba, este arriba, marcos en T-O, líneas de rumbo, hachuras, curvas de nivel, isolíneas. Cada una es una decisión, y cada una se tomó por una razón. Conocer las convenciones de una época ayuda a dejar de leer el mapa como un artefacto moderno fallido.</li>
+  <li><strong>¿Qué deja afuera?</strong> Los silencios en un mapa rara vez son accidentales. El interior de África en una carta portulana del siglo XVII está en blanco porque los marineros genoveses no tenían motivos para trazarlo; las naciones indígenas de Norteamérica están ausentes en un mapa colonial de 1763 porque incluirlas habría socavado la pretensión jurídica que el mapa estaba haciendo.</li>
+  <li><strong>¿Quién lo hizo, y para quién?</strong> El mapa de un comerciante, el mapa de un soberano, el mapa de un misionero, el mapa de un navegante y el mapa de un erudito son objetos distintos. Los autores y la audiencia están codificados en cada decisión que el mapa toma.</li>
+</ul>
+
+<h2>La lectura más difícil</h2>
+<p>Nada de esto pretende romantizar los mapas antiguos. Muchos codifican políticas brutales — el despojo colonial, la jerarquía religiosa, la jerarquía racial, el borrado de sociedades preexistentes. Leerlos con generosidad no significa aceptar lo que afirman. Significa rechazar el gesto fácil de tratarlos como mapas modernos fallidos, y leerlos en cambio como los argumentos que realmente son: argumentos sobre qué es el mundo, qué importa en él, y qué preguntas son las que cuentan como preguntas.</p>
+
+<p>Tal vez la palabra más útil aquí sea también la más sencilla: la voz <em>mapa</em> viene del latín <em>mappa</em>, que significaba paño o servilleta. No hay nada en la palabra que exija exactitud de ningún tipo. Un mapa es un paño en el que alguien dibujó unas marcas. Esas marcas hacen una afirmación. La tarea del historiador es leer la afirmación.</p>
+`,
 "old-maps-not-inaccurate": `
 <p class="lede" style="margin-bottom:32px">There is a familiar way of looking at old maps: you point at the misshapen coastlines, the missing continents, the mythological creatures in the margins, and you remark, with some condescension, on how little the makers knew. It is a tempting reading, and it has the virtue of being easy. It is also wrong.</p>
 
@@ -2241,11 +2455,11 @@ function renderLearn() {
       <div class="map-frame" style="aspect-ratio: 4/3">${window.mapSVG(a.style, a.title.length + i)}</div>
       <div class="article-body">
         <div class="meta-row">
-          <span class="meta">${a.topic}</span><span class="dot"></span>
-          <span class="meta" style="color:${isFull ? 'var(--gold)' : 'var(--ink-faint)'}">${a.status}</span>
+          <span class="meta">${loc(a, "topic")}</span><span class="dot"></span>
+          <span class="meta" style="color:${isFull ? 'var(--gold)' : 'var(--ink-faint)'}">${loc(a, "status")}</span>
         </div>
-        <h3 style="margin-top:12px">${a.title}</h3>
-        <p style="margin-top:14px; color:var(--ink-dim)">${a.excerpt}</p>
+        <h3 style="margin-top:12px">${loc(a, "title")}</h3>
+        <p style="margin-top:14px; color:var(--ink-dim)">${loc(a, "excerpt")}</p>
         <span class="meta" style="margin-top:18px; display:inline-block; color:${isFull ? 'var(--gold)' : 'var(--ink-faint)'}; font-style:italic">${isFull ? 'Read article →' : 'Full article forthcoming'}</span>
       </div>
     ${cardClose}`;
@@ -2259,7 +2473,7 @@ function renderArticle(slug) {
   const article = ARTICLES.find(a => a.slug === slug);
   const body = ARTICLE_BODIES[slug];
   if (article && body) {
-    setPageMeta(`${article.title} — Mappa Mundi`, article.excerpt.slice(0, 200), "article/" + slug);
+    setPageMeta(`${loc(article, "title")} — Mappa Mundi`, loc(article, "excerpt").slice(0, 200), "article/" + slug);
   }
   if (!article || !body) {
     root.innerHTML = `
@@ -2275,8 +2489,8 @@ function renderArticle(slug) {
     <div class="container article-reader">
       <a href="#/learn" class="meta" style="display:inline-block; margin-top:48px; color:var(--ink-muted)">← All articles</a>
       <header class="article-reader-header">
-        <span class="eyebrow">${article.topic}</span>
-        <h1 style="margin-top:14px">${article.title}</h1>
+        <span class="eyebrow">${loc(article, "topic")}</span>
+        <h1 style="margin-top:14px">${loc(article, "title")}</h1>
       </header>
       <div class="article-reader-body">
         ${body}
@@ -2360,7 +2574,7 @@ function renderAtlas() {
         </label>
         <select id="atlas-era" class="select">
           <option value="all">All eras</option>
-          ${ERAS.map(e => `<option value="${e.key}" ${atlasState.filterEra === e.key ? 'selected' : ''}>${e.label}</option>`).join("")}
+          ${ERAS.map(e => `<option value="${e.key}" ${atlasState.filterEra === e.key ? 'selected' : ''}>${loc(e, "label")}</option>`).join("")}
         </select>
         <span class="meta atlas-count">${fmt(plotted.length)} maps shown</span>
       </div>
@@ -2436,8 +2650,11 @@ const SEQUENCES = [
   {
     slug: "before-after-tordesillas",
     title: "Before and after the Treaty of Tordesillas",
+    title_es: "Antes y después del Tratado de Tordesillas",
     eyebrow: "Sequence · 4 maps · ≈ 45 min",
+    eyebrow_es: "Secuencia · 4 mapas · ≈ 45 min",
     lede: "In June 1494, Spain and Portugal signed a treaty in the Castilian town of Tordesillas dividing the non-Christian world between them along a meridian in the Atlantic. The treaty was an agreement between two crowns about places almost none of them had seen. This sequence walks through four maps that show what that meridian did, and what it left out.",
+    lede_es: "En junio de 1494, España y Portugal firmaron en la villa castellana de Tordesillas un tratado que dividía entre ambas coronas el mundo no cristiano a lo largo de un meridiano en el Atlántico. El tratado era un acuerdo entre dos coronas sobre lugares que casi ninguna de ellas había visto. Esta secuencia recorre cuatro mapas que muestran qué hizo ese meridiano y qué dejó por fuera.",
     maps: ["seed_056", "seed_006", "seed_013", "seed_060"],
     transitions: [
       "Martellus's map shows the European geographical imagination right before Columbus crossed. Asia is overextended eastward — making the Atlantic look small. Columbus consulted Martellus-style geography. The Tordesillas line had not yet been drawn, but the cartographic argument that the Atlantic was crossable was already on the page.",
@@ -2445,13 +2662,23 @@ const SEQUENCES = [
       "Juan de la Cosa, who sailed with Columbus, drew his world map around 1500. The Old World is rendered in mature portolan style. The New World is sketched in green, intentionally provisional. This is the moment Tordesillas becomes geographical — when the cartographic instrument starts to depict the territories that the line claimed.",
       "Eighty years on, the Spanish Habsburg empire of 1580 unifies the Iberian crowns and inherits Portuguese possessions. The Tordesillas line is no longer visible on the map; one colour now covers everything from Manila to Mexico City to Brussels. This is what the 1494 meridian eventually produced."
     ],
-    closing: "The Treaty of Tordesillas is a paradigmatic case of how cartography produces, rather than records, political reality. The meridian was an abstraction; through the maps that followed, it became an empire. Questions to leave the room with: what other maps in the archive show meridians or borders that did the same kind of work? What does it mean to map a place before having visited it?"
+    transitions_es: [
+      "El mapa de Martellus muestra la imaginación geográfica europea justo antes de que Colón cruzara. Asia aparece sobreextendida hacia el este — lo que hace parecer pequeño al Atlántico. Colón consultó una geografía al estilo de Martellus. La línea de Tordesillas aún no se había trazado, pero el argumento cartográfico de que el Atlántico era cruzable ya estaba sobre la página.",
+      "Ocho años después de Tordesillas aparece el Planisferio de Cantino — el primer mapa que muestra el meridiano como un trazo vertical seguro a través del Atlántico. El Caribe aparece por primera vez. Los litorales africanos son ya precisos; el Brasil se esboza. Una línea sobre un mapa se ha vuelto una reclamación política sobre medio planeta.",
+      "Juan de la Cosa, que navegó con Colón, dibujó su mapamundi hacia 1500. El Viejo Mundo se renderiza con un estilo portulano maduro. El Nuevo Mundo se esboza en verde, intencionadamente provisional. Es el momento en que Tordesillas se vuelve geográfico — cuando el instrumento cartográfico empieza a representar los territorios que la línea reclamaba.",
+      "Ochenta años más tarde, el imperio español de los Habsburgo en 1580 unifica las coronas ibéricas y hereda las posesiones portuguesas. La línea de Tordesillas ya no es visible en el mapa; un solo color cubre todo desde Manila hasta Ciudad de México y Bruselas. Esto es lo que el meridiano de 1494 acabó produciendo."
+    ],
+    closing: "The Treaty of Tordesillas is a paradigmatic case of how cartography produces, rather than records, political reality. The meridian was an abstraction; through the maps that followed, it became an empire. Questions to leave the room with: what other maps in the archive show meridians or borders that did the same kind of work? What does it mean to map a place before having visited it?",
+    closing_es: "El Tratado de Tordesillas es un caso paradigmático de cómo la cartografía produce — más que registra — la realidad política. El meridiano fue una abstracción; a través de los mapas que siguieron, se volvió un imperio. Preguntas con las que salir del aula: ¿qué otros mapas del archivo muestran meridianos o fronteras que hicieron el mismo tipo de trabajo? ¿Qué significa cartografiar un lugar antes de haberlo visitado?"
   },
   {
     slug: "how-earth-was-measured",
     title: "How the Earth was measured",
+    title_es: "Cómo se midió la Tierra",
     eyebrow: "Sequence · 5 maps · ≈ 55 min",
+    eyebrow_es: "Secuencia · 5 mapas · ≈ 55 min",
     lede: "The history of cartography is a history of measuring devices. Astrolabes, chronometers, theodolites, satellites. This sequence walks through five maps that mark turning points in how the Earth has been pinned to numbers — and what each measurement choice made visible or invisible.",
+    lede_es: "La historia de la cartografía es una historia de instrumentos de medición. Astrolabios, cronómetros, teodolitos, satélites. Esta secuencia recorre cinco mapas que marcan puntos de inflexión en cómo la Tierra ha sido sujetada a los números — y qué hizo visible o invisible cada elección de medición.",
     maps: ["seed_009", "seed_002", "seed_007", "seed_049", "seed_023"],
     transitions: [
       "Ptolemy's coordinate system, recovered in Renaissance Florence, taught Europe that places on Earth could be located by paired numbers — latitude and longitude. The mathematical lattice was the radical idea. The actual coordinates were often wrong; the framework was right.",
@@ -2460,13 +2687,24 @@ const SEQUENCES = [
       "Captain Cook's three Pacific voyages (1768–79) added precision: marine chronometers solved the longitude problem; astronomical observation became routine. The Pacific was made cartographically European in three voyages. Polynesian wayfinding traditions, equally sophisticated by their own metrics, were rendered invisible.",
       "NASA's Blue Marble (2002) is composed from satellite imagery — measurement at planetary scale, in spectra that no human eye can see. The Earth becomes one body. The question 'where am I' becomes solvable to one metre."
     ],
-    closing: "Each measurement system answered the question of its moment: Ptolemy needed a framework; al-Idrisi needed travel times; Mercator needed compass bearings; Cook needed longitude; NASA needed satellite mosaics. What question is your phone's GPS answering? And what are the kinds of geographic knowledge it makes harder to imagine?"
+    transitions_es: [
+      "El sistema de coordenadas de Ptolomeo, recuperado en la Florencia renacentista, enseñó a Europa que los lugares de la Tierra podían localizarse mediante pares de números — latitud y longitud. La retícula matemática era la idea radical. Las coordenadas concretas estaban frecuentemente mal; el marco era correcto.",
+      "La Tabula Rogeriana de al-Idrisi (1154) — cinco siglos antes que Mercator — medía distancias en días de viaje, no en grados. Captura una inteligencia cartográfica distinta: el conocimiento como acumulación, indexado por la experiencia, orientado con el sur arriba.",
+      "La proyección de Mercator (1569) está construida para una sola tarea: hacer rectas las líneas de rumbo. Todo lo demás se sacrifica a ese objetivo. Es una herramienta, no una visión del mundo — pero se volvió visión del mundo de todas formas.",
+      "Los tres viajes pacíficos del capitán Cook (1768–79) añadieron precisión: los cronómetros marinos resolvieron el problema de la longitud; la observación astronómica se volvió rutina. El Pacífico se volvió cartográficamente europeo en tres viajes. Las tradiciones polinesias de wayfinding, igualmente sofisticadas según sus propios estándares, fueron invisibilizadas.",
+      "La Blue Marble de la NASA (2002) está compuesta a partir de imágenes satelitales — medición a escala planetaria, en espectros que ningún ojo humano puede ver. La Tierra se vuelve un solo cuerpo. La pregunta «¿dónde estoy?» se vuelve resoluble al metro."
+    ],
+    closing: "Each measurement system answered the question of its moment: Ptolemy needed a framework; al-Idrisi needed travel times; Mercator needed compass bearings; Cook needed longitude; NASA needed satellite mosaics. What question is your phone's GPS answering? And what are the kinds of geographic knowledge it makes harder to imagine?",
+    closing_es: "Cada sistema de medición respondió a la pregunta de su momento: Ptolomeo necesitaba un marco; al-Idrisi necesitaba tiempos de viaje; Mercator necesitaba líneas de rumbo; Cook necesitaba longitud; la NASA necesitaba mosaicos satelitales. ¿Qué pregunta está respondiendo el GPS de tu celular? ¿Y qué tipos de conocimiento geográfico vuelve más difíciles de imaginar?"
   },
   {
     slug: "what-gets-centered",
     title: "What gets centred",
+    title_es: "Qué queda en el centro",
     eyebrow: "Sequence · 4 maps · ≈ 40 min",
+    eyebrow_es: "Secuencia · 4 mapas · ≈ 40 min",
     lede: "Every map has a centre. The choice of where to put it is rarely neutral — it is often the most important argument the map makes. This sequence asks what changes when the centre changes.",
+    lede_es: "Todo mapa tiene un centro. La elección de dónde ponerlo rara vez es neutral — suele ser el argumento más importante que hace el mapa. Esta secuencia pregunta qué cambia cuando el centro cambia.",
     maps: ["seed_003", "seed_002", "seed_007", "seed_023"],
     transitions: [
       "The Hereford Mappa Mundi puts Jerusalem at the centre, with east at the top. The map's centre is theological: salvation history. The geographic world arranges itself around the sacred.",
@@ -2474,46 +2712,80 @@ const SEQUENCES = [
       "Mercator's 1569 projection places Europe near the centre — not deliberately, but by convention, since the prime meridian on most reproductions runs through London or Paris. The visual result is a continent of average size made to look central.",
       "NASA's Blue Marble has no political boundaries, but it does have a chosen centring: most reproductions show Africa central. Pacific-centred versions exist; they make Asia and the Americas look like edges. The 'true' centre of Earth depends on which face is shown."
     ],
-    closing: "Centre is choice. Sometimes the choice is theological, sometimes practical, sometimes accidental, sometimes political. Ask students to draw the map of their own city. Where would they put the centre — and why?"
+    transitions_es: [
+      "La Mappa Mundi de Hereford pone a Jerusalén en el centro, con el este arriba. El centro del mapa es teológico: la historia de la salvación. El mundo geográfico se organiza en torno a lo sagrado.",
+      "La Tabula Rogeriana de al-Idrisi, dos siglos antes, orienta su mapa con el sur arriba — pero su centro funcional es el Mediterráneo, el mar donde se movían el comercio, las ideas y la gente. La decisión fue cultural, no teológica, y funciona.",
+      "La proyección de Mercator de 1569 sitúa a Europa cerca del centro — no deliberadamente, sino por convención, ya que el meridiano cero en la mayoría de las reproducciones pasa por Londres o París. El resultado visual es un continente de tamaño medio que parece central.",
+      "La Blue Marble de la NASA no tiene fronteras políticas, pero sí tiene un centrado elegido: la mayoría de las reproducciones muestran a África al centro. Existen versiones centradas en el Pacífico; hacen que Asia y América parezcan bordes. El centro «verdadero» de la Tierra depende de qué cara se muestre."
+    ],
+    closing: "Centre is choice. Sometimes the choice is theological, sometimes practical, sometimes accidental, sometimes political. Ask students to draw the map of their own city. Where would they put the centre — and why?",
+    closing_es: "El centro es una elección. A veces es teológica, a veces práctica, a veces accidental, a veces política. Pide a los estudiantes que dibujen el mapa de su propia ciudad. ¿Dónde pondrían el centro — y por qué?"
   },
   {
     slug: "arctic-myth-to-measurement",
     title: "The Arctic: from myth to measurement",
+    title_es: "El Ártico: del mito a la medición",
     eyebrow: "Sequence · 3 maps · ≈ 30 min",
+    eyebrow_es: "Secuencia · 3 mapas · ≈ 30 min",
     lede: "For most of the history of European cartography, the North Pole was less a place than an inference. This sequence follows three centuries of how Europeans drew the Arctic — from a magnetic mountain that did not exist to satellite imagery in real time.",
+    lede_es: "Durante la mayor parte de la historia de la cartografía europea, el Polo Norte fue menos un lugar que una inferencia. Esta secuencia sigue tres siglos de cómo los europeos dibujaron el Ártico — desde una montaña magnética que no existía hasta imágenes satelitales en tiempo real.",
     maps: ["seed_017", "seed_049", "seed_044"],
     transitions: [
       "Mercator's 1606 Arctic map is built around the Rupes Nigra, a legendary 33-mile-tall magnetic mountain. Mercator reasoned from compass behaviour to geography. He was wrong about almost every detail, but his reasoning was rigorous. The map is an artefact of careful inference, not of observation.",
       "Cook's third voyage (1776–79) sought a Northwest Passage from the Pacific side. He sailed into the Bering Strait and was turned back by ice. The map of his voyages turns blank space into mapped coastline — but the central Arctic is still terra incognita.",
       "Natural Earth's contemporary shaded-relief raster shows the Arctic with the same fidelity as any other part of the world — derived from satellite altimetry and bathymetry. The Rupes Nigra is gone. So is the speculation. But the political geography of the Arctic — disputed sovereignty over a melting basin — is a new layer with new uncertainties."
     ],
-    closing: "Three different epistemic regimes — medieval-Christian inference, Enlightenment-imperial voyaging, satellite measurement — produce three different Arctics. What new uncertainties does our most recent regime produce, and how will the Arctic look on a map drawn in 2100?"
+    transitions_es: [
+      "El mapa del Ártico de Mercator de 1606 está construido en torno a la Rupes Nigra, una legendaria montaña magnética de 53 km de altura. Mercator razonaba del comportamiento de la brújula a la geografía. Se equivocó en casi todos los detalles, pero su razonamiento era riguroso. El mapa es un artefacto de inferencia cuidadosa, no de observación.",
+      "El tercer viaje de Cook (1776–79) buscaba un Paso del Noroeste desde el lado del Pacífico. Navegó hasta el estrecho de Bering y el hielo lo obligó a regresar. El mapa de sus viajes convierte espacio en blanco en litoral cartografiado — pero el Ártico central sigue siendo terra incognita.",
+      "El ráster contemporáneo de relieve sombreado de Natural Earth muestra el Ártico con la misma fidelidad que cualquier otra parte del mundo — derivado de altimetría y batimetría satelital. La Rupes Nigra ha desaparecido. También la especulación. Pero la geografía política del Ártico — soberanías disputadas sobre una cuenca que se derrite — es una capa nueva con incertidumbres nuevas."
+    ],
+    closing: "Three different epistemic regimes — medieval-Christian inference, Enlightenment-imperial voyaging, satellite measurement — produce three different Arctics. What new uncertainties does our most recent regime produce, and how will the Arctic look on a map drawn in 2100?",
+    closing_es: "Tres regímenes epistémicos distintos — la inferencia medieval-cristiana, el viaje ilustrado-imperial, la medición satelital — producen tres Árticos distintos. ¿Qué nuevas incertidumbres produce nuestro régimen más reciente, y cómo se verá el Ártico en un mapa dibujado en 2100?"
   },
   {
     slug: "two-ages-of-empire",
     title: "Two ages of empire compared",
+    title_es: "Dos eras de imperio comparadas",
     eyebrow: "Sequence · 3 maps · ≈ 40 min",
+    eyebrow_es: "Secuencia · 3 mapas · ≈ 40 min",
     lede: "Empires of two thousand years apart produce different kinds of cartography. This sequence compares the Roman world at 117 CE, the Mongol khanates in 1294, and the British Empire in 1886 — to ask what kind of object a 'world empire' is, and how it gets drawn.",
+    lede_es: "Los imperios separados por dos mil años producen tipos distintos de cartografía. Esta secuencia compara el mundo romano en 117 d.C., los kanatos mongoles en 1294 y el Imperio británico en 1886 — para preguntar qué tipo de objeto es un «imperio mundial» y cómo se lo dibuja.",
     maps: ["seed_036", "seed_037", "seed_032"],
     transitions: [
       "The Roman Empire at 117 CE is rendered here in modern cartographic conventions Romans themselves did not have. The empire ringed the Mediterranean; the limes (frontier defences) appear as continuous lines. The map flattens what was a zone of variable control into a confident boundary.",
       "The Mongol Empire at the death of Kublai Khan (1294) was the largest contiguous land empire in human history. The map shows the four khanates as a single block — but they were politically distinct, drifting apart already. The single colour is a simplification that has its own consequences.",
       "The British Empire of 1886, in Walter Crane's propagandistic Imperial Federation map, colours every possession imperial red. Britannia is enthroned at the centre. This is empire as visual argument — the choice of colour, projection, and frame is openly persuasive."
     ],
-    closing: "Roman territory was administered from cities; Mongol authority was tributary; British control was naval and commercial. The three maps make all three look like the same kind of object — a coloured block on a flat surface. What does that visual sameness conceal? Where else in the present do we see empire taking forms that maps don't yet know how to draw?"
+    transitions_es: [
+      "El Imperio romano en 117 d.C. aparece aquí representado con convenciones cartográficas modernas que los propios romanos no tenían. El imperio rodeaba el Mediterráneo; el limes (las defensas de frontera) aparece como líneas continuas. El mapa aplana lo que era una zona de control variable en una frontera segura.",
+      "El Imperio mongol a la muerte de Kublai Kan (1294) fue el mayor imperio terrestre contiguo de la historia humana. El mapa muestra los cuatro kanatos como un único bloque — pero ya eran políticamente distintos, derivando uno del otro. El color único es una simplificación con sus propias consecuencias.",
+      "El Imperio británico de 1886, en el mapa propagandístico de la Federación Imperial de Walter Crane, colorea cada posesión de rojo imperial. Britannia aparece entronizada en el centro. Esto es imperio como argumento visual — la elección de color, proyección y marco son abiertamente persuasivos."
+    ],
+    closing: "Roman territory was administered from cities; Mongol authority was tributary; British control was naval and commercial. The three maps make all three look like the same kind of object — a coloured block on a flat surface. What does that visual sameness conceal? Where else in the present do we see empire taking forms that maps don't yet know how to draw?",
+    closing_es: "El territorio romano se administraba desde ciudades; la autoridad mongol era tributaria; el control británico era naval y comercial. Los tres mapas hacen que los tres parezcan el mismo tipo de objeto — un bloque coloreado sobre una superficie plana. ¿Qué oculta esa similitud visual? ¿En qué otros lugares del presente vemos al imperio tomando formas que los mapas aún no saben cómo dibujar?"
   },
   {
     slug: "first-thematic-maps",
     title: "The first thematic maps",
+    title_es: "Los primeros mapas temáticos",
     eyebrow: "Sequence · 3 maps · ≈ 35 min",
+    eyebrow_es: "Secuencia · 3 mapas · ≈ 35 min",
     lede: "A thematic map argues a claim, rather than depicting a region. The 19th century is when this genre is born. This sequence walks through three founding examples — the geological, the epidemiological, the statistical — and asks what made the thematic map possible at that moment.",
+    lede_es: "Un mapa temático defiende una afirmación, en lugar de representar una región. El siglo XIX es cuando nace este género. Esta secuencia recorre tres ejemplos fundacionales — el geológico, el epidemiológico, el estadístico — y pregunta qué hizo posible el mapa temático en ese momento.",
     maps: ["seed_021", "seed_052", "seed_053"],
     transitions: [
       "William Smith's 1815 geological map of England is the founding document of stratigraphic geology — and the first national-scale thematic map of any kind. Smith's insight that strata could be identified by their fossils displaced a biblical chronology and produced a working tool that predicted coal seams.",
       "John Snow's 1854 cholera map maps disease deaths onto a city street grid, showing the cluster around the Broad Street pump. The map made a causal argument against the miasma theory — that cholera was waterborne. It is conventionally cited as the founding case of epidemiological cartography.",
       "Charles Joseph Minard's 1869 flow map of Napoleon's 1812 Russian campaign carries six variables on a single page: army size, geography, direction, temperature, time, and casualties. It is anti-imperial: an old man's accounting of an emperor's catastrophe."
     ],
-    closing: "Thematic mapping was made possible by the 19th century's overlap of state statistics, mass print, and reform politics. Each of these three maps argues something. What does the modern thematic map (a COVID-19 dashboard, a heat-vulnerability index, an election forecast) argue? Who is its Minard, and is it being read carefully?"
+    transitions_es: [
+      "El mapa geológico de Inglaterra de William Smith de 1815 es el documento fundacional de la geología estratigráfica — y el primer mapa temático de escala nacional de cualquier tipo. La intuición de Smith de que los estratos podían identificarse por sus fósiles desplazó la cronología bíblica y produjo una herramienta de trabajo que predecía las vetas de carbón.",
+      "El mapa del cólera de John Snow de 1854 cartografía las muertes de la enfermedad sobre una retícula de calles, mostrando el racimo alrededor de la bomba de Broad Street. El mapa hizo un argumento causal contra la teoría miasmática — el cólera se transmitía por el agua. Se cita convencionalmente como el caso fundador de la cartografía epidemiológica.",
+      "El mapa de flujo de Charles Joseph Minard de 1869 sobre la campaña rusa de Napoleón en 1812 lleva seis variables en una sola página: tamaño del ejército, geografía, dirección, temperatura, tiempo y bajas. Es antiimperial: el ajuste de cuentas de un anciano con la catástrofe de un emperador."
+    ],
+    closing: "Thematic mapping was made possible by the 19th century's overlap of state statistics, mass print, and reform politics. Each of these three maps argues something. What does the modern thematic map (a COVID-19 dashboard, a heat-vulnerability index, an election forecast) argue? Who is its Minard, and is it being read carefully?",
+    closing_es: "La cartografía temática fue posible gracias a la confluencia, en el siglo XIX, de las estadísticas estatales, la imprenta masiva y la política de reforma. Cada uno de estos tres mapas defiende algo. ¿Qué defienden los mapas temáticos modernos (un tablero de COVID-19, un índice de vulnerabilidad al calor, un pronóstico electoral)? ¿Quién es su Minard, y se está leyendo con cuidado?"
   },
 ];
 
@@ -2556,15 +2828,15 @@ function renderSequence(slug) {
       </div>`;
     return;
   }
-  setPageMeta(`${seq.title} — Mappa Mundi sequence`, seq.lede.slice(0,200), "sequence/" + slug);
+  setPageMeta(`${loc(seq, "title")} — Mappa Mundi sequence`, loc(seq, "lede").slice(0,200), "sequence/" + slug);
   const steps = seq.maps.map(id => MAPS.find(m => m.id === id)).filter(Boolean);
   root.innerHTML = `
     <div class="container article-reader">
       <a href="#/sequences" class="meta" style="display:inline-block; margin-top:48px; color:var(--ink-muted)">← All sequences</a>
       <header class="article-reader-header">
-        <span class="eyebrow">${seq.eyebrow}</span>
-        <h1 style="margin-top:14px">${seq.title}</h1>
-        <p class="lede" style="margin-top:18px">${seq.lede}</p>
+        <span class="eyebrow">${loc(seq, "eyebrow")}</span>
+        <h1 style="margin-top:14px">${loc(seq, "title")}</h1>
+        <p class="lede" style="margin-top:18px">${loc(seq, "lede")}</p>
       </header>
       <ol class="sequence-steps">
         ${steps.map((m, i) => `
@@ -2579,7 +2851,7 @@ function renderSequence(slug) {
                   <span class="meta" style="margin-top:10px; display:inline-block; color:var(--gold)">Open this map →</span>
                 </div>
               </a>
-              <p class="sequence-step-text">${seq.transitions[i] || ''}</p>
+              <p class="sequence-step-text">${(loc(seq, "transitions") || seq.transitions || [])[i] || ''}</p>
             </div>
           </li>
         `).join("")}
@@ -2588,7 +2860,7 @@ function renderSequence(slug) {
       <section class="sequence-closing">
         <span class="eyebrow">Closing</span>
         <h3 style="margin-top:10px">Take the conversation further</h3>
-        <p style="margin-top:14px; font-size:17px; line-height:1.7">${seq.closing}</p>
+        <p style="margin-top:14px; font-size:17px; line-height:1.7">${loc(seq, "closing")}</p>
       </section>
       <div style="text-align:center; margin-top: 48px">
         <a class="btn btn-ghost" href="#/sequences">← All sequences</a>
@@ -2599,36 +2871,96 @@ function renderSequence(slug) {
 
 /* ============ GLOSSARY ============ */
 const GLOSSARY = [
-  { term:"Mappa mundi", def:"Latin for 'map of the world'. By convention refers to medieval European world maps that placed Jerusalem at the centre and combined geography with theology, classical legend, and cosmology. Often east-up.", examples:["seed_003","seed_004","seed_026"] },
-  { term:"T-O map", def:"A medieval schematic of the world as a circle (the O) divided by a T-shape into three continents: Asia at the top, Europe lower-left, Africa lower-right. The T is formed by the Don, the Mediterranean, and the Nile. Sometimes Christ or the Trinity occupy the centre.", examples:["seed_003","seed_026"] },
-  { term:"Portolan chart", def:"A nautical chart of the 13th–17th centuries, drawn on vellum, characterised by rhumb-line networks radiating from compass-rose nodes. Coastlines are observationally precise; interiors are decorative or empty. Used by Italian and Catalan navigators.", examples:["seed_012","seed_024"] },
-  { term:"Rhumb line", def:"A line of constant compass bearing. On a Mercator projection it is a straight line — which is the whole point of that projection. On a globe it spirals toward the poles.", examples:["seed_007"] },
-  { term:"Mercator projection", def:"A cylindrical map projection devised by Gerardus Mercator in 1569 in which rhumb lines are straight. Excellent for navigation; severely distorts polar areas. Still the default projection of most digital map services.", examples:["seed_007","seed_032"] },
-  { term:"Cordiform projection", def:"A heart-shaped projection used in the 16th century, notably by Mercator. Distorts in different ways than cylindrical projections; was favoured for symbolic and artistic reasons as much as mathematical ones.", examples:["seed_001"] },
-  { term:"Hachure", def:"Short parallel pen-strokes used on 18th–19th-century topographic maps to indicate slope direction and steepness. Replaced over the 20th century by contour lines.", examples:[] },
-  { term:"Isoline / isarithm", def:"A line on a map connecting points of equal value. Specific cases include isotherms (equal temperature), isobars (equal pressure), isohyets (equal precipitation), and contour lines (equal elevation).", examples:["seed_022","seed_050"] },
-  { term:"Contour line", def:"An isoline of constant elevation. The defining convention of modern topographic mapping. Slope is encoded by line spacing: closer lines mean steeper terrain.", examples:[] },
-  { term:"Cadastre / cadastral map", def:"A map of land parcels for property and taxation purposes. Cadastral mapping was a central administrative tool of European colonial states; it produced both the data and the legal fiction of clean, individuated ownership.", examples:["seed_033"] },
-  { term:"T-in-O / Macrobian map", def:"A T-O variant from late antique authors (Macrobius, 5th c.) showing zonal climate bands — torrid, temperate, frigid — across both hemispheres. Influential in medieval Europe.", examples:[] },
-  { term:"Itinerary map", def:"A map organised around a route rather than a region. The Tabula Peutingeriana is the classic case: distances along Roman roads are accurate, but the underlying geography is distorted to fit.", examples:["seed_010"] },
-  { term:"Bird's-eye view / axonometric plan", def:"A representation of a city as if seen from an oblique angle above. Common in early-modern European city plans (16th–18th c.). Each building is drawn from the same angle, so the plan reads as a model.", examples:["seed_019"] },
-  { term:"Köppen-Geiger classification", def:"A climate classification developed by Wladimir Köppen (1900, revised 1936) using monthly temperature and precipitation thresholds, organised around what vegetation grows where. Still the most widely used climate classification.", examples:["seed_022","seed_050"] },
-  { term:"Treaty of Tordesillas line", def:"The 1494 meridian dividing Spanish and Portuguese claims in the New World. It first appears as a cartographic object on the Cantino Planisphere (1502). One of the earliest examples of a line on a map producing a political reality.", examples:["seed_006"] },
-  { term:"Convivencia", def:"The historiographic term for the period of relative coexistence and intellectual exchange between Christians, Muslims, and Jews on the Iberian peninsula and in Norman Sicily (c. 700–1500). The Tabula Rogeriana is its outstanding cartographic product.", examples:["seed_002"] },
-  { term:"Cosmogram", def:"A representation of the cosmos as a structured whole, often combining geography with cosmological or theological order. Medieval mappae mundi are cosmograms; so is the Codex Mendoza frontispiece, which presents Tenochtitlan as the centre of a four-quarter world.", examples:["seed_003","seed_015"] },
-  { term:"South-up orientation", def:"A map oriented with south at the top. Standard in much of Islamic medieval cartography (e.g. al-Idrisi). Modern viewers find it disorienting, but there is no geographic reason maps should be north-up — the convention is a 15th–16th-century European choice that became universal.", examples:["seed_002"] },
-  { term:"Globe gores", def:"The almond-shaped strips into which a globe's surface is divided when printed on a flat sheet and later pasted onto a sphere. A standard production method from the 16th century onward.", examples:[] },
-  { term:"Toponym", def:"A place name. The history of cartography is in significant part a history of which toponyms get written in larger type, which get standardised, and which get displaced — as colonial maps repeatedly demonstrate.", examples:[] },
-  { term:"Datum (geodetic)", def:"A reference system used to specify coordinates on Earth's surface. WGS84 is the most common today; older maps use a wide variety of regional and national datums. Coordinates without a stated datum are at best ambiguous.", examples:[] },
-  { term:"Triangulation", def:"A surveying method that determines positions by measuring the angles of triangles whose vertices are at known points. The basis of modern national topographic surveys from the 18th century onward.", examples:["seed_021"] },
-  { term:"Pluriversal mapping", def:"A category that refuses the assumption that there is one neutral 'world' to be mapped. Indigenous cartographies, counter-mapping projects, and many post-colonial cartographies are pluriversal in this sense — they insist that the world is many worlds, mapped from many positions.", examples:["seed_038"] },
-  { term:"Counter-mapping", def:"Mapping by communities who refuse the cartographic conventions imposed on them by states. Includes indigenous land mapping, queer cartographies, and activist cartographies that document marginalised geographies.", examples:[] },
-  { term:"Compass rose", def:"A figure on a map showing the orientation of the cardinal directions. Originally functional for portolan charts; later a decorative convention that signals 'this is a map' even when the object is fictional.", examples:["seed_012"] },
-  { term:"Scale bar", def:"A graphical scale on a map, used to measure distances. Modern maps usually include one. Many medieval and early-modern maps did not, because their organising logic was not metric.", examples:[] },
-  { term:"Aspect (cartographic)", def:"The shape of the parameter set that a projection optimises. The Mercator preserves angles (it is conformal); the Lambert equal-area preserves area; the Robinson is a compromise. No projection preserves both shape and area.", examples:[] },
-  { term:"Geocoding", def:"The process of assigning coordinates to place names or addresses. A 20th–21st-century process; pre-modern maps generally did the inverse, attaching place names to coordinates determined astronomically.", examples:[] },
-  { term:"Ground truth", def:"Direct observation in the field, used to verify or correct what appears on a map. Aerial photography and satellite imagery are constantly checked against ground truth — and frequently disagree with it.", examples:[] },
-  { term:"Lidar", def:"Light Detection and Ranging: a sensing technique that uses laser pulses to measure elevations at high resolution. Now standard for topographic surveys, archaeology, and forestry. Has revealed previously unknown features under forest canopy.", examples:[] },
+  { term:"Mappa mundi", term_es:"Mappa mundi", examples:["seed_003","seed_004","seed_026"],
+    def:"Latin for 'map of the world'. By convention refers to medieval European world maps that placed Jerusalem at the centre and combined geography with theology, classical legend, and cosmology. Often east-up.",
+    def_es:"Latín por «mapa del mundo». Por convención se refiere a los mapas mundi europeos medievales que colocaban a Jerusalén en el centro y combinaban geografía con teología, leyenda clásica y cosmología. Suelen tener el este arriba." },
+  { term:"T-O map", term_es:"Mapa en T-O", examples:["seed_003","seed_026"],
+    def:"A medieval schematic of the world as a circle (the O) divided by a T-shape into three continents: Asia at the top, Europe lower-left, Africa lower-right. The T is formed by the Don, the Mediterranean, and the Nile. Sometimes Christ or the Trinity occupy the centre.",
+    def_es:"Esquema medieval del mundo como un círculo (la O) dividido por una forma de T en tres continentes: Asia arriba, Europa abajo-izquierda, África abajo-derecha. La T la forman el Don, el Mediterráneo y el Nilo. A veces Cristo o la Trinidad ocupan el centro." },
+  { term:"Portolan chart", term_es:"Carta portulana", examples:["seed_012","seed_024"],
+    def:"A nautical chart of the 13th–17th centuries, drawn on vellum, characterised by rhumb-line networks radiating from compass-rose nodes. Coastlines are observationally precise; interiors are decorative or empty. Used by Italian and Catalan navigators.",
+    def_es:"Carta náutica de los siglos XIII al XVII, dibujada sobre pergamino, caracterizada por redes de líneas de rumbo que irradian desde nodos con rosa de los vientos. Los litorales son observacionalmente exactos; los interiores son decorativos o vacíos. Usada por navegantes italianos y catalanes." },
+  { term:"Rhumb line", term_es:"Línea de rumbo (loxodrómica)", examples:["seed_007"],
+    def:"A line of constant compass bearing. On a Mercator projection it is a straight line — which is the whole point of that projection. On a globe it spirals toward the poles.",
+    def_es:"Una línea de rumbo de brújula constante. Sobre la proyección de Mercator aparece como recta — ese es justamente el punto de esa proyección. Sobre el globo describe una espiral hacia los polos." },
+  { term:"Mercator projection", term_es:"Proyección de Mercator", examples:["seed_007","seed_032"],
+    def:"A cylindrical map projection devised by Gerardus Mercator in 1569 in which rhumb lines are straight. Excellent for navigation; severely distorts polar areas. Still the default projection of most digital map services.",
+    def_es:"Proyección cilíndrica ideada por Gerardus Mercator en 1569 en la que las líneas de rumbo aparecen rectas. Excelente para navegar; distorsiona gravemente las zonas polares. Sigue siendo la proyección por defecto de la mayoría de servicios cartográficos digitales." },
+  { term:"Cordiform projection", term_es:"Proyección cordiforme", examples:["seed_001"],
+    def:"A heart-shaped projection used in the 16th century, notably by Mercator. Distorts in different ways than cylindrical projections; was favoured for symbolic and artistic reasons as much as mathematical ones.",
+    def_es:"Proyección en forma de corazón usada en el siglo XVI, sobre todo por Mercator. Distorsiona de modo distinto a las proyecciones cilíndricas; se prefería tanto por razones simbólicas y artísticas como matemáticas." },
+  { term:"Hachure", term_es:"Hachuras", examples:[],
+    def:"Short parallel pen-strokes used on 18th–19th-century topographic maps to indicate slope direction and steepness. Replaced over the 20th century by contour lines.",
+    def_es:"Trazos cortos paralelos usados en los mapas topográficos de los siglos XVIII y XIX para indicar la dirección y la pendiente del terreno. Reemplazados a lo largo del siglo XX por las curvas de nivel." },
+  { term:"Isoline / isarithm", term_es:"Isolínea / isaritmo", examples:["seed_022","seed_050"],
+    def:"A line on a map connecting points of equal value. Specific cases include isotherms (equal temperature), isobars (equal pressure), isohyets (equal precipitation), and contour lines (equal elevation).",
+    def_es:"Línea de un mapa que conecta puntos de igual valor. Casos específicos: isotermas (igual temperatura), isobaras (igual presión), isohietas (igual precipitación) y curvas de nivel (igual altitud)." },
+  { term:"Contour line", term_es:"Curva de nivel", examples:[],
+    def:"An isoline of constant elevation. The defining convention of modern topographic mapping. Slope is encoded by line spacing: closer lines mean steeper terrain.",
+    def_es:"Isolínea de altitud constante. La convención definitoria de la cartografía topográfica moderna. La pendiente se codifica por el espaciado: líneas más juntas significan terreno más empinado." },
+  { term:"Cadastre / cadastral map", term_es:"Catastro / mapa catastral", examples:["seed_033"],
+    def:"A map of land parcels for property and taxation purposes. Cadastral mapping was a central administrative tool of European colonial states; it produced both the data and the legal fiction of clean, individuated ownership.",
+    def_es:"Mapa de parcelas para fines de propiedad y tributación. La cartografía catastral fue una herramienta administrativa central de los Estados coloniales europeos; produjo tanto los datos como la ficción jurídica de una propiedad limpia e individualizada." },
+  { term:"T-in-O / Macrobian map", term_es:"Mapa macrobiano", examples:[],
+    def:"A T-O variant from late antique authors (Macrobius, 5th c.) showing zonal climate bands — torrid, temperate, frigid — across both hemispheres. Influential in medieval Europe.",
+    def_es:"Variante del esquema T-O proveniente de autores tardoantiguos (Macrobio, s. V) que muestra zonas climáticas — tórrida, templada, frígida — en ambos hemisferios. Influyente en la Europa medieval." },
+  { term:"Itinerary map", term_es:"Mapa itinerario", examples:["seed_010"],
+    def:"A map organised around a route rather than a region. The Tabula Peutingeriana is the classic case: distances along Roman roads are accurate, but the underlying geography is distorted to fit.",
+    def_es:"Mapa organizado alrededor de una ruta más que de una región. La Tabula Peutingeriana es el caso clásico: las distancias por las calzadas romanas son exactas, pero la geografía subyacente se distorsiona para encajar." },
+  { term:"Bird's-eye view / axonometric plan", term_es:"Vista de pájaro / plano axonométrico", examples:["seed_019"],
+    def:"A representation of a city as if seen from an oblique angle above. Common in early-modern European city plans (16th–18th c.). Each building is drawn from the same angle, so the plan reads as a model.",
+    def_es:"Representación de una ciudad como vista desde un ángulo oblicuo superior. Habitual en los planos urbanos de la primera modernidad europea (ss. XVI–XVIII). Cada edificio se dibuja desde el mismo ángulo, así que el plano se lee como una maqueta." },
+  { term:"Köppen-Geiger classification", term_es:"Clasificación de Köppen-Geiger", examples:["seed_022","seed_050"],
+    def:"A climate classification developed by Wladimir Köppen (1900, revised 1936) using monthly temperature and precipitation thresholds, organised around what vegetation grows where. Still the most widely used climate classification.",
+    def_es:"Clasificación climática desarrollada por Wladimir Köppen (1900, revisada en 1936) usando umbrales mensuales de temperatura y precipitación, organizada en torno a qué vegetación crece dónde. Sigue siendo la clasificación climática más utilizada." },
+  { term:"Treaty of Tordesillas line", term_es:"Línea del Tratado de Tordesillas", examples:["seed_006"],
+    def:"The 1494 meridian dividing Spanish and Portuguese claims in the New World. It first appears as a cartographic object on the Cantino Planisphere (1502). One of the earliest examples of a line on a map producing a political reality.",
+    def_es:"El meridiano de 1494 que dividía las pretensiones españolas y portuguesas en el Nuevo Mundo. Aparece como objeto cartográfico por primera vez en el Planisferio de Cantino (1502). Uno de los ejemplos más tempranos de una línea en un mapa que produce una realidad política." },
+  { term:"Convivencia", term_es:"Convivencia", examples:["seed_002"],
+    def:"The historiographic term for the period of relative coexistence and intellectual exchange between Christians, Muslims, and Jews on the Iberian peninsula and in Norman Sicily (c. 700–1500). The Tabula Rogeriana is its outstanding cartographic product.",
+    def_es:"Término historiográfico para el período de coexistencia relativa e intercambio intelectual entre cristianos, musulmanes y judíos en la península Ibérica y en la Sicilia normanda (c. 700–1500). La Tabula Rogeriana es su producto cartográfico más destacado." },
+  { term:"Cosmogram", term_es:"Cosmograma", examples:["seed_003","seed_015"],
+    def:"A representation of the cosmos as a structured whole, often combining geography with cosmological or theological order. Medieval mappae mundi are cosmograms; so is the Codex Mendoza frontispiece, which presents Tenochtitlan as the centre of a four-quarter world.",
+    def_es:"Representación del cosmos como un todo estructurado, que suele combinar geografía con orden cosmológico o teológico. Las mappae mundi medievales son cosmogramas; también lo es el frontispicio del Códice Mendoza, que presenta a Tenochtitlan como el centro de un mundo de cuatro cuadrantes." },
+  { term:"South-up orientation", term_es:"Orientación sur-arriba", examples:["seed_002"],
+    def:"A map oriented with south at the top. Standard in much of Islamic medieval cartography (e.g. al-Idrisi). Modern viewers find it disorienting, but there is no geographic reason maps should be north-up — the convention is a 15th–16th-century European choice that became universal.",
+    def_es:"Mapa con el sur en lo alto. Estándar en gran parte de la cartografía islámica medieval (p. ej. al-Idrisi). Al lector moderno le resulta desorientador, pero no hay ninguna razón geográfica para que los mapas tengan el norte arriba — esa convención fue una elección europea del siglo XV–XVI que se volvió universal." },
+  { term:"Globe gores", term_es:"Husos de globo", examples:[],
+    def:"The almond-shaped strips into which a globe's surface is divided when printed on a flat sheet and later pasted onto a sphere. A standard production method from the 16th century onward.",
+    def_es:"Las tiras en forma de almendra en las que se divide la superficie de un globo cuando se imprime sobre papel plano para luego pegarse sobre una esfera. Método de producción estándar desde el siglo XVI." },
+  { term:"Toponym", term_es:"Topónimo", examples:[],
+    def:"A place name. The history of cartography is in significant part a history of which toponyms get written in larger type, which get standardised, and which get displaced — as colonial maps repeatedly demonstrate.",
+    def_es:"Un nombre de lugar. La historia de la cartografía es en gran parte una historia de qué topónimos se escriben con tipos más grandes, cuáles se estandarizan y cuáles se desplazan — como demuestran repetidamente los mapas coloniales." },
+  { term:"Datum (geodetic)", term_es:"Datum geodésico", examples:[],
+    def:"A reference system used to specify coordinates on Earth's surface. WGS84 is the most common today; older maps use a wide variety of regional and national datums. Coordinates without a stated datum are at best ambiguous.",
+    def_es:"Sistema de referencia usado para especificar coordenadas sobre la superficie terrestre. WGS84 es el más común hoy; los mapas más antiguos usan gran variedad de datums regionales y nacionales. Las coordenadas sin un datum declarado son, en el mejor de los casos, ambiguas." },
+  { term:"Triangulation", term_es:"Triangulación", examples:["seed_021"],
+    def:"A surveying method that determines positions by measuring the angles of triangles whose vertices are at known points. The basis of modern national topographic surveys from the 18th century onward.",
+    def_es:"Método de levantamiento topográfico que determina posiciones midiendo los ángulos de triángulos cuyos vértices están en puntos conocidos. Base de los levantamientos topográficos nacionales modernos desde el siglo XVIII." },
+  { term:"Pluriversal mapping", term_es:"Cartografía pluriversal", examples:["seed_038"],
+    def:"A category that refuses the assumption that there is one neutral 'world' to be mapped. Indigenous cartographies, counter-mapping projects, and many post-colonial cartographies are pluriversal in this sense — they insist that the world is many worlds, mapped from many positions.",
+    def_es:"Categoría que rechaza el supuesto de que hay un único «mundo» neutral por mapear. Las cartografías indígenas, los proyectos de contracartografía y muchas cartografías poscoloniales son pluriversales en este sentido — insisten en que el mundo son muchos mundos, mapeados desde muchas posiciones." },
+  { term:"Counter-mapping", term_es:"Contracartografía", examples:[],
+    def:"Mapping by communities who refuse the cartographic conventions imposed on them by states. Includes indigenous land mapping, queer cartographies, and activist cartographies that document marginalised geographies.",
+    def_es:"Cartografía hecha por comunidades que rechazan las convenciones cartográficas que los Estados les imponen. Incluye el mapeo de tierras indígenas, las cartografías queer y las cartografías activistas que documentan geografías marginadas." },
+  { term:"Compass rose", term_es:"Rosa de los vientos", examples:["seed_012"],
+    def:"A figure on a map showing the orientation of the cardinal directions. Originally functional for portolan charts; later a decorative convention that signals 'this is a map' even when the object is fictional.",
+    def_es:"Figura sobre el mapa que muestra la orientación de los puntos cardinales. Originalmente funcional en las cartas portulanas; después una convención decorativa que señala «esto es un mapa», incluso cuando el objeto es ficticio." },
+  { term:"Scale bar", term_es:"Barra de escala", examples:[],
+    def:"A graphical scale on a map, used to measure distances. Modern maps usually include one. Many medieval and early-modern maps did not, because their organising logic was not metric.",
+    def_es:"Escala gráfica de un mapa, usada para medir distancias. Los mapas modernos suelen incluirla. Muchos mapas medievales y de la primera modernidad no la tenían, porque su lógica organizadora no era métrica." },
+  { term:"Aspect (cartographic)", term_es:"Aspecto cartográfico", examples:[],
+    def:"The shape of the parameter set that a projection optimises. The Mercator preserves angles (it is conformal); the Lambert equal-area preserves area; the Robinson is a compromise. No projection preserves both shape and area.",
+    def_es:"El conjunto de parámetros que una proyección optimiza. La de Mercator conserva ángulos (es conforme); la equivalente de Lambert conserva área; la de Robinson es un compromiso. Ninguna proyección conserva forma y área a la vez." },
+  { term:"Geocoding", term_es:"Geocodificación", examples:[],
+    def:"The process of assigning coordinates to place names or addresses. A 20th–21st-century process; pre-modern maps generally did the inverse, attaching place names to coordinates determined astronomically.",
+    def_es:"Proceso de asignar coordenadas a nombres de lugares o direcciones. Es un proceso de los siglos XX y XXI; los mapas premodernos generalmente hacían lo inverso, adjuntando topónimos a coordenadas determinadas astronómicamente." },
+  { term:"Ground truth", term_es:"Verdad de campo (ground truth)", examples:[],
+    def:"Direct observation in the field, used to verify or correct what appears on a map. Aerial photography and satellite imagery are constantly checked against ground truth — and frequently disagree with it.",
+    def_es:"Observación directa en el terreno, usada para verificar o corregir lo que aparece en un mapa. La fotografía aérea y la imagen satelital se contrastan constantemente con la verdad de campo — y frecuentemente discrepan de ella." },
+  { term:"Lidar", term_es:"Lidar", examples:[],
+    def:"Light Detection and Ranging: a sensing technique that uses laser pulses to measure elevations at high resolution. Now standard for topographic surveys, archaeology, and forestry. Has revealed previously unknown features under forest canopy.",
+    def_es:"Light Detection and Ranging: técnica de detección que usa pulsos láser para medir alturas con alta resolución. Hoy es estándar en levantamientos topográficos, arqueología y silvicultura. Ha revelado rasgos antes desconocidos bajo el dosel arbóreo." },
 ];
 
 function renderGlossary() {
@@ -2644,9 +2976,9 @@ function renderGlossary() {
       </div>
       <div class="glossary-grid">
         ${entries.map(g => `
-          <article class="glossary-entry" id="g-${escapeAttr(g.term.toLowerCase().replace(/[^a-z]+/g,'-'))}">
-            <h3 class="glossary-term">${g.term}</h3>
-            <p class="glossary-def">${g.def}</p>
+          <article class="glossary-entry" id="g-${escapeAttr(loc(g, "term").toLowerCase().replace(/[^a-z]+/g,'-'))}">
+            <h3 class="glossary-term">${loc(g, "term")}</h3>
+            <p class="glossary-def">${loc(g, "def")}</p>
             ${g.examples.length ? `
               <div class="glossary-examples">
                 <span class="meta">See:</span>
@@ -3359,14 +3691,14 @@ function runSearchModal(q) {
     ${catMatches.length ? `<div class="sm-section">
       <span class="eyebrow">Categories</span>
       ${catMatches.map(c => `<a class="sm-row" href="#/archive/${c.key}" data-close>
-        <span class="sm-row-title">${c.display}</span>
+        <span class="sm-row-title">${loc(c, "display")}</span>
         <span class="sm-row-meta">${fmt(COUNTS.byCategory[c.key]||0)} maps</span>
       </a>`).join("")}
     </div>` : ''}
     ${eraMatches.length ? `<div class="sm-section">
       <span class="eyebrow">Eras</span>
       ${eraMatches.map(e => `<button class="sm-row" data-era-jump="${e.key}">
-        <span class="sm-row-title">${e.label}</span>
+        <span class="sm-row-title">${loc(e, "label")}</span>
         <span class="sm-row-meta">${fmt(COUNTS.byEra[e.key]||0)} maps</span>
       </button>`).join("")}
     </div>` : ''}
