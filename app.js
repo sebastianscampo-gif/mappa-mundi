@@ -3301,7 +3301,16 @@ function init() {
   renderRoute();
   // Register service worker (silently — only on http(s) origins, not file://)
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("[SW] registration failed:", err));
+    navigator.serviceWorker.register("./sw.js").then(reg => {
+      // If a new SW takes control while this page is open, reload once so the
+      // user sees fresh JS/CSS instead of the previously-cached versions.
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloaded) return;
+        reloaded = true;
+        location.reload();
+      });
+    }).catch(err => console.warn("[SW] registration failed:", err));
   }
   // Run smoke tests after the first render (so the hash is whatever the user landed on)
   setTimeout(runSmokeTests, 100);

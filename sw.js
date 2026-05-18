@@ -2,10 +2,10 @@
 // Strategy:
 //   - Pre-cache the app shell (HTML, CSS, JS) on install
 //   - Network-first for HTML so updates show up; fall back to cache when offline
-//   - Cache-first for static assets (CSS, JS, fonts, images)
-//   - Bumping CACHE_VERSION invalidates older caches
+//   - Stale-while-revalidate for static assets: serve cache immediately AND fetch fresh in background
+//   - Bumping CACHE_VERSION invalidates older caches and forces fresh shell
 
-const CACHE_VERSION = "mappa-v1";
+const CACHE_VERSION = "mappa-v3";
 const SHELL = [
   "./",
   "./index.html",
@@ -53,17 +53,21 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // For other same-origin requests, cache-first
+  // For other same-origin requests, stale-while-revalidate:
+  // - Return whatever is in cache immediately (fast)
+  // - In parallel, fetch from network and update the cache (so the next visit is fresh)
+  // - If nothing is in cache, wait for the network
   e.respondWith(
     caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req).then(res => {
+      const fetchAndUpdate = fetch(req).then(res => {
         if (res.ok) {
           const copy = res.clone();
           caches.open(CACHE_VERSION).then(c => c.put(req, copy));
         }
         return res;
-      });
+      }).catch(() => cached);  // if offline and no cache, just fall through
+      return cached || fetchAndUpdate;
     })
   );
 });
+
