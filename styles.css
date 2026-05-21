@@ -546,6 +546,10 @@ a { color: inherit; text-decoration: none; }
 .i { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.4; fill: none; flex-shrink: 0; }
 .i-lg { width: 20px; height: 20px; }
 
+/* Ensure `hidden` attribute always wins over class-level display rules
+   (e.g. .audience-grid { display: grid } would otherwise override hidden). */
+[hidden] { display: none !important; }
+
 /* ============ Accessibility: focus indicators ============ */
 /* Show a visible focus ring only on keyboard navigation (not on mouse clicks) */
 *:focus { outline: none; }

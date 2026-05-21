@@ -18,7 +18,17 @@ const LANG = {
   en: {
     "nav.home":"Home","nav.archive":"Categories","nav.timeline":"Timeline","nav.compare":"Compare",
     "nav.atlas":"Atlas","nav.collections":"Collections","nav.learn":"Learn","nav.about":"About","nav.library":"Library",
-    "nav.signin":"Sign in","nav.create":"Create account","nav.menu":"Menu","nav.search":"Search",
+    "nav.signin":"Sign in","nav.create":"Create account","nav.menu":"Menu","nav.search":"Search","nav.theme":"Toggle theme","nav.lang":"Switch language",
+    "modal.close":"Close (Esc)","modal.hint":"Scroll to zoom · drag to pan · press Esc to close",
+    "search.placeholder":"Search 1,559 maps — by title, place, cartographer, era, language, or tag…",
+    "search.empty":"Start typing to search across all 1,559 maps — by title, place, cartographer, era, language, or tag.",
+    "library.eyebrow":"Your Library","library.title":"Saved, read, written.",
+    "library.lede":"Maps you've saved, places you've recently visited in the archive, your private collections, and the notes you've written along the way.",
+    "library.tab.saved":"Saved maps","library.tab.recent":"Recently viewed","library.tab.collections":"My collections","library.tab.notes":"Notes","library.tab.offline":"Offline",
+    "library.saved":"Saved maps","library.recent":"Recently viewed","library.notes":"My notes","library.collections":"My collections",
+    "library.last7":"Last 7 days","library.two":"2 collections",
+    "library.count.maps":"maps","library.count.notes":"notes",
+    "home.mapday":"Map of the Day","home.openthis":"Open this map","home.browse16":"Browse all 16 categories",
     "hero.eyebrow":"Est. MMXXIV — A Digital Atlas of Cartography",
     "hero.subtitle":"Explore the history of the world through maps.",
     "hero.placeholder":"Search maps, places, periods, empires, climates…",
@@ -66,7 +76,17 @@ const LANG = {
   es: {
     "nav.home":"Inicio","nav.archive":"Categorías","nav.timeline":"Cronología","nav.compare":"Comparar",
     "nav.atlas":"Atlas","nav.collections":"Colecciones","nav.learn":"Aprender","nav.about":"Acerca de","nav.library":"Biblioteca",
-    "nav.signin":"Iniciar sesión","nav.create":"Crear cuenta","nav.menu":"Menú","nav.search":"Buscar",
+    "nav.signin":"Iniciar sesión","nav.create":"Crear cuenta","nav.menu":"Menú","nav.search":"Buscar","nav.theme":"Cambiar tema","nav.lang":"Cambiar idioma",
+    "modal.close":"Cerrar (Esc)","modal.hint":"Rueda para hacer zoom · arrastra para mover · Esc para cerrar",
+    "search.placeholder":"Busca entre 1.559 mapas — por título, lugar, cartógrafo, era, idioma o etiqueta…",
+    "search.empty":"Empieza a escribir para buscar entre los 1.559 mapas — por título, lugar, cartógrafo, era, idioma o etiqueta.",
+    "library.eyebrow":"Tu biblioteca","library.title":"Guardado, leído, anotado.",
+    "library.lede":"Los mapas que has guardado, los lugares que has visitado recientemente en el archivo, tus colecciones privadas y las notas que has escrito por el camino.",
+    "library.tab.saved":"Guardados","library.tab.recent":"Vistos recientemente","library.tab.collections":"Mis colecciones","library.tab.notes":"Notas","library.tab.offline":"Sin conexión",
+    "library.saved":"Mapas guardados","library.recent":"Vistos recientemente","library.notes":"Mis notas","library.collections":"Mis colecciones",
+    "library.last7":"Últimos 7 días","library.two":"2 colecciones",
+    "library.count.maps":"mapas","library.count.notes":"notas",
+    "home.mapday":"Mapa del día","home.openthis":"Abrir este mapa","home.browse16":"Explorar las 16 categorías",
     "hero.eyebrow":"Est. MMXXIV — Un atlas digital de cartografía",
     "hero.subtitle":"Explora la historia del mundo a través de los mapas.",
     "hero.placeholder":"Buscar mapas, lugares, periodos, imperios, climas…",
@@ -150,6 +170,9 @@ function applyStaticI18n() {
   });
   document.querySelectorAll("[data-i18n-title]").forEach(el => {
     el.title = t(el.dataset.i18nTitle);
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+    el.setAttribute("aria-label", t(el.dataset.i18nAria));
   });
   // Show/hide language-specific blocks (the About page uses this pattern for long-form text)
   const lang = currentLocale();
@@ -411,7 +434,7 @@ function mapCard(m) {
           <span class="chip chip-gold">${categoryDisplay(m.category)}</span>
         </div>
         <h4>${shortTitle(m.title, 70)}</h4>
-        ${m.description ? `<p class="desc">${shortText(m.description, 150)}</p>` : ''}
+        ${m.description ? `<p class="desc">${shortText(loc(m, "description"), 150)}</p>` : ''}
         <div class="meta-row" style="margin-top:6px">
           ${m.region ? `<span class="meta">${m.region}</span>` : ''}
           ${m.author && !m._authorIsContributor ? `<span class="dot"></span><span class="meta">${shortText(m.author, 40)}</span>` : ''}
@@ -652,7 +675,7 @@ function renderHome() {
         <div class="map-frame map-frame-img" style="aspect-ratio:4/3">${imageEl(featured, {eager: true})}</div>
       </a>
       <div class="featured-body">
-        <span class="eyebrow">Map of the Day · ${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}</span>
+        <span class="eyebrow">${t("home.mapday")} · ${new Date().toLocaleDateString(currentLocale() === "es" ? "es-ES" : "en-GB", {day:"numeric",month:"long",year:"numeric"})}</span>
         <h2 style="margin-top:14px">${featured.title}</h2>
         ${featured.original_title ? `<p style="margin-top:8px; font-style:italic; color:var(--ink-muted); font-size:14px">${shortText(featured.original_title, 140)}</p>` : ''}
         <div class="meta-row" style="margin-top:14px">
@@ -661,11 +684,11 @@ function renderHome() {
           ${featured.region ? `<span class="dot"></span><span class="meta">${featured.region}</span>` : ''}
         </div>
         <p style="margin-top:22px; color:var(--ink-dim); font-size:17px; line-height:1.65; max-width:54ch">
-          ${featured.historical_context || featured.description || 'Catalogued in the archive of Mappa Mundi.'}
+          ${loc(featured, "historical_context") || loc(featured, "description") || (currentLocale() === "es" ? "Catalogado en el archivo de Mappa Mundi." : "Catalogued in the archive of Mappa Mundi.")}
         </p>
         <div class="row" style="margin-top:28px; gap:10px">
-          <a class="btn btn-primary" href="#/map/${featured.id}">Open this map ${icons.arrow}</a>
-          <a class="btn btn-ghost" href="#/archive">Browse all 16 categories</a>
+          <a class="btn btn-primary" href="#/map/${featured.id}">${t("home.openthis")} ${icons.arrow}</a>
+          <a class="btn btn-ghost" href="#/archive">${t("home.browse16")}</a>
         </div>
       </div>
     </div>`;
@@ -677,11 +700,12 @@ function renderHome() {
     .slice(0, 4);
   $("#home-collections").innerHTML = top4.map(c => {
     const cover = categoryCoverImage(c.key);
+    const w = currentLocale() === "es" ? "mapas" : "maps";
     return `
     <a class="collection-card" href="#/archive/${c.key}">
       <div class="map-frame map-frame-img" style="aspect-ratio: 5/3">${cover ? imageEl(cover) : ''}</div>
       <div class="collection-body">
-        <span class="meta">${fmt(c.count)} maps · ${c.subtitle}</span>
+        <span class="meta">${fmt(c.count)} ${w} · ${loc(c, "subtitle")}</span>
         <h3>${loc(c, "display")}</h3>
         <p>${loc(c, "description")}</p>
       </div>
@@ -690,11 +714,12 @@ function renderHome() {
 
   // Quick category strip — ALL 16 categories with real counts
   const sorted = [...CATEGORY_META].map(c => ({...c, count: COUNTS.byCategory[c.key] || 0})).sort((a,b)=>b.count-a.count);
+  const isEs = currentLocale() === "es";
   $("#home-category-strip").innerHTML = sorted.map((c, i) => `
     <a class="category" href="#/archive/${c.key}">
       <span class="category-num">${String(i+1).padStart(2,'0')}</span>
       <span class="category-name">${loc(c, "display")}</span>
-      <span class="category-count">${fmt(c.count)} map${c.count===1?"":"s"} · ${c.subtitle}</span>
+      <span class="category-count">${fmt(c.count)} ${isEs ? (c.count===1?"mapa":"mapas") : ("map"+(c.count===1?"":"s"))} · ${loc(c, "subtitle")}</span>
     </a>`).join("");
 
   // Curated essays strip — rotate the 40 fully-essayed maps daily so the home page surfaces different ones each day,
@@ -2099,7 +2124,7 @@ function sidePanel(m, side) {
       <div style="padding:18px 4px 0">
         <span class="meta">${m.year}${m.author ? ` · ${m.author.split("/")[0]}` : ''}</span>
         <h3 style="margin-top:6px"><a href="#/map/${m.id}" style="color:inherit" class="link-underline-hover">${shortTitle(m.title, 70)}</a></h3>
-        ${m.description ? `<p style="margin-top:10px; color:var(--ink-muted); font-size:13px; line-height:1.5">${shortText(m.description, 160)}</p>` : ''}
+        ${m.description ? `<p style="margin-top:10px; color:var(--ink-muted); font-size:13px; line-height:1.5">${shortText(loc(m, "description"), 160)}</p>` : ''}
       </div>
     </div>`;
 }
@@ -3083,6 +3108,42 @@ function renderAbout() {
 function renderLibrary() {
   const rich = MAPS.filter(m => m.renderable && m.description);
   const u = Account.current();
+  // Sample personal collections — translated by locale, no real account data behind them yet
+  const collectionsRoot = $("#library-collections-content");
+  if (collectionsRoot) {
+    const isEs = currentLocale() === "es";
+    const date1 = isEs ? "12 ene 2026" : "12 Jan 2026";
+    const date2 = isEs ? "03 mar 2026" : "03 Mar 2026";
+    const cards = [
+      {
+        cover_en: "For my dissertation on<br/>Ottoman cartography",
+        cover_es: "Para mi tesis sobre<br/>cartografía otomana",
+        meta_en: `17 maps · created ${date1}`,
+        meta_es: `17 mapas · creada el ${date1}`,
+        title_en: "Ottoman cartography, 1500–1700",
+        title_es: "Cartografía otomana, 1500–1700",
+      },
+      {
+        cover_en: "Climate maps for<br/>spring lecture series",
+        cover_es: "Mapas climáticos para<br/>el curso de primavera",
+        meta_en: `9 maps · created ${date2}`,
+        meta_es: `9 mapas · creada el ${date2}`,
+        title_en: "Climate cartography teaching set",
+        title_es: "Set didáctico de cartografía climática",
+      },
+    ];
+    collectionsRoot.innerHTML = cards.map(c => `
+      <a class="collection-card" href="#/collections">
+        <div class="map-frame" style="aspect-ratio: 5/3; padding: 18px; display:flex; align-items:flex-end">
+          <div style="font-family:var(--serif-display); font-size:32px; color:var(--gold); line-height:1.05">${isEs ? c.cover_es : c.cover_en}</div>
+        </div>
+        <div class="collection-body">
+          <span class="meta">${isEs ? c.meta_es : c.meta_en}</span>
+          <h3 style="margin-top:6px">${isEs ? c.title_es : c.title_en}</h3>
+        </div>
+      </a>
+    `).join("");
+  }
 
   // Saved maps — prefer real account data; fall back to sample maps when not signed in
   const savedIds = u?.savedMaps || [];
@@ -3093,11 +3154,14 @@ function renderLibrary() {
   const histMaps = (u?.history || []).map(h => MAPS.find(m => m.id === h.mapId)).filter(Boolean);
   const recent = histMaps.length ? histMaps.slice(0, 5) : rich.slice(4, 9);
 
-  // Update dynamic counts in the static HTML
+  // Update dynamic counts in the static HTML (localized)
+  const isEs = currentLocale() === "es";
+  const mapsWord = (n) => isEs ? (n === 1 ? "mapa" : "mapas") : (n === 1 ? "map" : "maps");
+  const notesWord = (n) => isEs ? (n === 1 ? "nota" : "notas") : (n === 1 ? "note" : "notes");
   const savedCountEl = $("#library-saved-count");
-  if (savedCountEl) savedCountEl.textContent = `${savedMaps.length} map${savedMaps.length !== 1 ? "s" : ""}`;
+  if (savedCountEl) savedCountEl.textContent = `${savedMaps.length} ${mapsWord(savedMaps.length)}`;
   const recentCountEl = $("#library-recent-count");
-  if (recentCountEl) recentCountEl.textContent = histMaps.length ? `${histMaps.length} map${histMaps.length !== 1 ? "s" : ""}` : "Last 7 days";
+  if (recentCountEl) recentCountEl.textContent = histMaps.length ? `${histMaps.length} ${mapsWord(histMaps.length)}` : t("library.last7");
 
   $("#library-saved").innerHTML = saved.map(mapCard).join("");
   $("#library-recent").innerHTML = recent.map(smallMapTile).join("");
@@ -3105,7 +3169,7 @@ function renderLibrary() {
   // Notes: prefer real account notes; fall back to demo notes when not signed in or empty
   const realNotes = u?.notes || [];
   const notesCountEl = $("#library-notes-count");
-  if (notesCountEl) notesCountEl.textContent = `${realNotes.length} note${realNotes.length !== 1 ? "s" : ""}`;
+  if (notesCountEl) notesCountEl.textContent = `${realNotes.length} ${notesWord(realNotes.length)}`;
 
   let notesHtml;
   if (realNotes.length) {
@@ -3590,8 +3654,8 @@ function renderNavAccount() {
   const u = Account.current();
   if (!u) {
     slot.innerHTML = `
-      <a class="nav-signin-btn" href="#/account/signin">Sign in</a>
-      <a class="btn btn-sm btn-primary hide-mobile" href="#/account/signup" style="margin-left:8px">Create account</a>
+      <a class="nav-signin-btn" href="#/account/signin">${t("nav.signin")}</a>
+      <a class="btn btn-sm btn-primary hide-mobile" href="#/account/signup" style="margin-left:8px">${t("nav.create")}</a>
     `;
   } else {
     slot.innerHTML = `
@@ -3687,25 +3751,27 @@ function runSearchModal(q) {
   const eraMatches = q ? ERAS.filter(e => normalizeForSearch(e.label).includes(nq)).slice(0,3) : [];
   const catMatches = q ? CATEGORY_META.filter(c => normalizeForSearch(c.display).includes(nq) || normalizeForSearch(c.subtitle).includes(nq)).slice(0,3) : [];
   const totalCount = q ? filterMaps({ search: q }).length : 0;
+  const smEs = currentLocale() === "es";
+  const smMaps = (n) => smEs ? (n===1?"mapa":"mapas") : ("map"+(n===1?"":"s"));
   $("#search-modal-results").innerHTML = q ? `
     ${catMatches.length ? `<div class="sm-section">
-      <span class="eyebrow">Categories</span>
+      <span class="eyebrow">${smEs ? "Categorías" : "Categories"}</span>
       ${catMatches.map(c => `<a class="sm-row" href="#/archive/${c.key}" data-close>
         <span class="sm-row-title">${loc(c, "display")}</span>
-        <span class="sm-row-meta">${fmt(COUNTS.byCategory[c.key]||0)} maps</span>
+        <span class="sm-row-meta">${fmt(COUNTS.byCategory[c.key]||0)} ${smMaps(COUNTS.byCategory[c.key]||0)}</span>
       </a>`).join("")}
     </div>` : ''}
     ${eraMatches.length ? `<div class="sm-section">
-      <span class="eyebrow">Eras</span>
+      <span class="eyebrow">${smEs ? "Eras" : "Eras"}</span>
       ${eraMatches.map(e => `<button class="sm-row" data-era-jump="${e.key}">
         <span class="sm-row-title">${loc(e, "label")}</span>
-        <span class="sm-row-meta">${fmt(COUNTS.byEra[e.key]||0)} maps</span>
+        <span class="sm-row-meta">${fmt(COUNTS.byEra[e.key]||0)} ${smMaps(COUNTS.byEra[e.key]||0)}</span>
       </button>`).join("")}
     </div>` : ''}
     <div class="sm-section">
       <div class="row" style="justify-content:space-between; margin-bottom:8px">
-        <span class="eyebrow">Maps</span>
-        <button class="sm-link" data-search-all>${fmt(totalCount)} total match${totalCount===1?"":"es"} →</button>
+        <span class="eyebrow">${smEs ? "Mapas" : "Maps"}</span>
+        <button class="sm-link" data-search-all>${smEs ? `${fmt(totalCount)} resultado${totalCount===1?"":"s"} en total →` : `${fmt(totalCount)} total match${totalCount===1?"":"es"} →`}</button>
       </div>
       ${results.length ? results.map(m => `
         <a class="sm-row" href="#/map/${m.id}" data-close>
@@ -3715,9 +3781,9 @@ function runSearchModal(q) {
             <span class="sm-row-meta">${m.year} · ${categoryDisplay(m.category)}${m.region ? ` · ${m.region}` : ''}</span>
           </div>
         </a>
-      `).join("") : `<p class="sm-empty">No maps match "${q}".</p>`}
+      `).join("") : `<p class="sm-empty">${smEs ? `Ningún mapa coincide con «${q}».` : `No maps match "${q}".`}</p>`}
     </div>
-  ` : `<p class="sm-empty">Start typing to search across all 1,559 maps — by title, place, cartographer, era, language, or tag.</p>`;
+  ` : `<p class="sm-empty">${t("search.empty")}</p>`;
   $$('[data-close]').forEach(el => el.addEventListener("click", closeSearchModal));
   $$('[data-era-jump]').forEach(el => el.addEventListener("click", () => {
     archiveState.era = el.dataset.eraJump;

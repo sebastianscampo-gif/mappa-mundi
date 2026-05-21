@@ -61,14 +61,14 @@
       <button class="icon-btn" id="global-search-btn" data-i18n-title="nav.search" title="Search">
         <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
       </button>
-      <button class="icon-btn theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle light/dark theme">
+      <button class="icon-btn theme-toggle" id="theme-toggle" data-i18n-title="nav.theme" data-i18n-aria="nav.theme" title="Toggle theme" aria-label="Toggle light/dark theme">
         <svg class="i theme-icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.4" fill="none"/><g stroke="currentColor" stroke-width="1.4"><line x1="12" y1="3" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="3" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21" y2="12"/><line x1="5.6" y1="5.6" x2="7" y2="7"/><line x1="17" y1="17" x2="18.4" y2="18.4"/><line x1="5.6" y1="18.4" x2="7" y2="17"/><line x1="17" y1="7" x2="18.4" y2="5.6"/></g></svg>
         <svg class="i theme-icon-moon" viewBox="0 0 24 24" hidden><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
       </button>
-      <button class="lang-toggle" id="lang-toggle" title="Switch language" aria-label="Switch language">
+      <button class="lang-toggle" id="lang-toggle" data-i18n-title="nav.lang" data-i18n-aria="nav.lang" title="Switch language" aria-label="Switch language">
         <span data-i18n="lang.toggle">Español</span>
       </button>
-      <button class="icon-btn nav-menu-btn" id="nav-menu-btn" data-i18n-title="nav.menu" title="Menu" aria-label="Open menu" aria-expanded="false">
+      <button class="icon-btn nav-menu-btn" id="nav-menu-btn" data-i18n-title="nav.menu" data-i18n-aria="nav.menu" title="Menu" aria-label="Open menu" aria-expanded="false">
         <svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
       </button>
       <div id="nav-account-slot" class="nav-account-slot"></div>
@@ -140,10 +140,10 @@
   <div class="container section">
     <div class="spread" style="margin-bottom: 28px">
       <div>
-        <span class="eyebrow">Explore by category</span>
-        <h2 style="margin-top:14px">Quick access</h2>
+        <span class="eyebrow" data-i18n="home.cats.eyebrow">Explore by category</span>
+        <h2 style="margin-top:14px" data-i18n="home.cats.title">Quick access</h2>
       </div>
-      <a class="btn btn-ghost" href="#/archive">Open the full archive →</a>
+      <a class="btn btn-ghost" href="#/archive" data-i18n="home.cats.cta">Open the full archive →</a>
     </div>
     <div class="category-strip" id="home-category-strip"></div>
   </div>
@@ -157,10 +157,10 @@
   <div class="container section-tight">
     <div class="spread" style="margin-bottom: 28px">
       <div>
-        <span class="eyebrow">Curated</span>
-        <h2 style="margin-top:14px">Featured collections</h2>
+        <span class="eyebrow" data-i18n="home.coll.eyebrow">Curated</span>
+        <h2 style="margin-top:14px" data-i18n="home.coll.title">Featured collections</h2>
       </div>
-      <a class="btn btn-ghost" href="#/collections">All collections →</a>
+      <a class="btn btn-ghost" href="#/collections" data-i18n="home.coll.cta">All collections →</a>
     </div>
     <div class="grid-cards-lg grid-cards" id="home-collections"></div>
   </div>
@@ -169,13 +169,13 @@
   <div class="container section-tight" style="padding-bottom: 96px">
     <div class="spread" style="margin-bottom: 24px">
       <div>
-        <span class="eyebrow">Start here</span>
-        <h2 style="margin-top:14px">Curated essays</h2>
-        <p class="lede" style="margin-top:14px; max-width: 62ch; font-size:16px">Forty maps with a full editorial essay on significance, what the map reveals, and the distortions that come with it. The best entry point to the archive.</p>
+        <span class="eyebrow" data-i18n="home.curated.eyebrow">Start here</span>
+        <h2 style="margin-top:14px" data-i18n="home.curated.title">Curated essays</h2>
+        <p class="lede" style="margin-top:14px; max-width: 62ch; font-size:16px" data-i18n="home.curated.lede">Forty maps with a full editorial essay on significance, what the map reveals, and the distortions that come with it. The best entry point to the archive.</p>
       </div>
       <div class="row" style="gap:6px; flex-wrap:wrap">
-        <button class="btn btn-ghost" id="home-browse-curated">See all 40 curated →</button>
-        <a class="btn btn-ghost" href="#/archive">Or browse all 1,559 maps →</a>
+        <button class="btn btn-ghost" id="home-browse-curated" data-i18n="home.curated.seeAll">See all 40 curated →</button>
+        <a class="btn btn-ghost" href="#/archive" data-i18n="home.curated.browseAll">Or browse all 1,559 maps →</a>
       </div>
     </div>
     <div class="grid-cards" id="home-curated"></div>
@@ -196,13 +196,13 @@
     </div>
     <div class="row" style="gap:8px">
       <span id="zoom-source"></span>
-      <button id="zoom-close" class="icon-btn" title="Close (Esc)">
+      <button id="zoom-close" class="icon-btn" data-i18n-title="modal.close" title="Close (Esc)">
         <svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
       </button>
     </div>
   </div>
   <div id="zoom-stage" class="zoom-modal-stage"></div>
-  <div class="zoom-modal-hint meta">Scroll to zoom · drag to pan · press Esc to close</div>
+  <div class="zoom-modal-hint meta" data-i18n="modal.hint">Scroll to zoom · drag to pan · press Esc to close</div>
 </div>
 
 <!-- ============ SEARCH MODAL ============ -->
@@ -210,7 +210,7 @@
   <div class="search-modal-inner">
     <div class="search-modal-bar">
       <svg class="i i-lg" viewBox="0 0 24 24" style="color:var(--ink-muted)"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
-      <input id="search-modal-input" placeholder="Search 1,559 maps — by title, place, cartographer, era, language, or tag…" autocomplete="off"/>
+      <input id="search-modal-input" data-i18n-placeholder="search.placeholder" placeholder="Search 1,559 maps — by title, place, cartographer, era, language, or tag…" autocomplete="off"/>
       <span class="kbd">esc</span>
       <button id="search-modal-close" class="icon-btn" style="margin-left:auto">
         <svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
@@ -424,23 +424,23 @@
 <section class="page" id="page-library" data-screen-label="Library">
   <div class="container">
     <div style="padding: 72px 0 0">
-      <span class="eyebrow">Your Library</span>
-      <h1 style="margin-top:18px">Saved, read, written.</h1>
-      <p class="lede" style="margin-top:18px; max-width: 62ch">Maps you've saved, places you've recently visited in the archive, your private collections, and the notes you've written along the way.</p>
+      <span class="eyebrow" data-i18n="library.eyebrow">Your Library</span>
+      <h1 style="margin-top:18px" data-i18n="library.title">Saved, read, written.</h1>
+      <p class="lede" style="margin-top:18px; max-width: 62ch" data-i18n="library.lede">Maps you've saved, places you've recently visited in the archive, your private collections, and the notes you've written along the way.</p>
     </div>
 
     <div class="library-tabs" style="margin-top: 48px">
-      <span class="library-tab active">Saved maps</span>
-      <span class="library-tab">Recently viewed</span>
-      <span class="library-tab">My collections</span>
-      <span class="library-tab">Notes</span>
-      <span class="library-tab">Offline</span>
+      <span class="library-tab active" data-i18n="library.tab.saved">Saved maps</span>
+      <span class="library-tab" data-i18n="library.tab.recent">Recently viewed</span>
+      <span class="library-tab" data-i18n="library.tab.collections">My collections</span>
+      <span class="library-tab" data-i18n="library.tab.notes">Notes</span>
+      <span class="library-tab" data-i18n="library.tab.offline">Offline</span>
     </div>
 
     <div class="stack-24" style="padding-bottom: 80px">
       <div>
         <div class="spread" style="margin-bottom:18px">
-          <h3>Saved maps</h3>
+          <h3 data-i18n="library.saved">Saved maps</h3>
           <span class="meta" id="library-saved-count">0 maps</span>
         </div>
         <div class="grid-cards" id="library-saved"></div>
@@ -448,15 +448,15 @@
 
       <div style="margin-top: 56px">
         <div class="spread" style="margin-bottom:18px">
-          <h3>Recently viewed</h3>
-          <span class="meta" id="library-recent-count">Last 7 days</span>
+          <h3 data-i18n="library.recent">Recently viewed</h3>
+          <span class="meta" id="library-recent-count" data-i18n="library.last7">Last 7 days</span>
         </div>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px" id="library-recent"></div>
       </div>
 
       <div style="margin-top: 56px">
         <div class="spread" style="margin-bottom:18px">
-          <h3>My notes</h3>
+          <h3 data-i18n="library.notes">My notes</h3>
           <span class="meta" id="library-notes-count">0 notes</span>
         </div>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px" id="library-notes"></div>
@@ -464,29 +464,10 @@
 
       <div style="margin-top: 56px">
         <div class="spread" style="margin-bottom:18px">
-          <h3>My collections</h3>
-          <span class="meta">2 collections</span>
+          <h3 data-i18n="library.collections">My collections</h3>
+          <span class="meta" data-i18n="library.two">2 collections</span>
         </div>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px">
-          <a class="collection-card" href="#/collections">
-            <div class="map-frame" style="aspect-ratio: 5/3; padding: 18px; display:flex; align-items:flex-end">
-              <div style="font-family:var(--serif-display); font-size:32px; color:var(--gold); line-height:1.05">For my dissertation on<br/>Ottoman cartography</div>
-            </div>
-            <div class="collection-body">
-              <span class="meta">17 maps · created 12 Jan 2026</span>
-              <h3 style="margin-top:6px">Ottoman cartography, 1500–1700</h3>
-            </div>
-          </a>
-          <a class="collection-card" href="#/collections">
-            <div class="map-frame" style="aspect-ratio: 5/3; padding: 18px; display:flex; align-items:flex-end">
-              <div style="font-family:var(--serif-display); font-size:32px; color:var(--gold); line-height:1.05">Climate maps for<br/>spring lecture series</div>
-            </div>
-            <div class="collection-body">
-              <span class="meta">9 maps · created 03 Mar 2026</span>
-              <h3 style="margin-top:6px">Climate cartography teaching set</h3>
-            </div>
-          </a>
-        </div>
+        <div id="library-collections-content" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px"></div>
       </div>
     </div>
   </div>
@@ -540,8 +521,11 @@
       <span>Mappa Mundi · MMXXIV–MMXXVI · <span data-i18n="footer.open">An open archive</span></span>
       <span data-i18n="footer.coords">Latitudes are decimal · Bearings are true · South is sometimes up</span>
     </div>
-    <div class="footer-attribution">
+    <div class="footer-attribution" data-lang="en">
       Images sourced from <strong>Wikimedia Commons</strong>, the <strong>Library of Congress</strong> (Geography &amp; Map Division), the <strong>Bibliothèque nationale de France</strong> (Gallica), the <strong>Internet Archive</strong>, <strong>Natural Earth</strong>, <strong>USGS</strong> and <strong>NASA</strong>. All maps are distributed under open licenses — public domain or Creative Commons. Where the source institution requires attribution, it appears on the map's detail page.
+    </div>
+    <div class="footer-attribution" data-lang="es">
+      Imágenes obtenidas de <strong>Wikimedia Commons</strong>, la <strong>Library of Congress</strong> (División de Geografía y Mapas), la <strong>Bibliothèque nationale de France</strong> (Gallica), el <strong>Internet Archive</strong>, <strong>Natural Earth</strong>, el <strong>USGS</strong> y la <strong>NASA</strong>. Todos los mapas se distribuyen bajo licencias abiertas — dominio público o Creative Commons. Cuando la institución de origen requiere atribución, esta aparece en la página de detalle del mapa.
     </div>
   </div>
 </footer>

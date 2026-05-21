@@ -5,7 +5,7 @@
 //   - Stale-while-revalidate for static assets: serve cache immediately AND fetch fresh in background
 //   - Bumping CACHE_VERSION invalidates older caches and forces fresh shell
 
-const CACHE_VERSION = "mappa-v6";
+const CACHE_VERSION = "mappa-v7";
 const SHELL = [
   "./",
   "./index.html",
